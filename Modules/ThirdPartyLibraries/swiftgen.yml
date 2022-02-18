@@ -1,0 +1,12 @@
+strings:
+  inputs: ThirdPartyLibraries/Resources/id.lproj/Localization.strings
+  outputs:
+    templateName: structured-swift5
+    output: ThirdPartyLibraries/Generated/Generated+Strings.swift
+xcassets:
+  inputs: 
+    - ThirdPartyLibraries/Resources/Images.xcassets
+    - ThirdPartyLibraries/Resources/Colors.xcassets
+  outputs:
+    templateName: swift5
+    output: ThirdPartyLibraries/Generated/Generated+Assets.swift

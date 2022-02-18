@@ -1,0 +1,14 @@
+/* 
+  Localization.strings
+  Pods
+
+  Created by Muhammad Muizzsudin on 13/12/21.
+  
+*/
+
+title = "Registrasi";
+description = "Siapkan dokumen di bawah ini untuk proses pendaftaran. Proses ini dapat membutuhkan waktu sampai dengan 30 menit.";
+id_card = "KTP";
+phone_number = "Nomor Telepon";
+email_addr = "Alamat Email";
+continue = "Lanjut";

@@ -1,0 +1,12 @@
+strings:
+  inputs: DevTools/Resources/id.lproj/Localization.strings
+  outputs:
+    templateName: structured-swift5
+    output: DevTools/Generated/Generated+Strings.swift
+xcassets:
+  inputs: 
+    - DevTools/Resources/Images.xcassets
+    - DevTools/Resources/Colors.xcassets
+  outputs:
+    templateName: swift5
+    output: DevTools/Generated/Generated+Assets.swift

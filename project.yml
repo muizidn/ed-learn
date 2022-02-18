@@ -1,0 +1,92 @@
+name: PrivyLearn
+configs:
+  # issue https://gitlab.PrivyLearn.id/PrivyLearn-mobile/super-PrivyLearn/-/issues/673
+  Debug: debug
+  Debug-IDE: debug
+  Release (QA): release
+  Release (AppStore): release
+configFiles:
+  Debug: xcconfig/Debug.xcconfig
+  Debug-IDE: xcconfig/Debug.xcconfig
+  Release (QA): xcconfig/Release.xcconfig
+  Release (AppStore): xcconfig/Release-AppStore.xcconfig
+settings:
+  MARKETING_VERSION: 3.6.0
+  CURRENT_PROJECT_VERSION: 1
+targets:
+  PrivyLearniOS:
+    type: application
+    platform: iOS
+    postBuildScripts: []
+    sources:
+      - path: "PrivyLearniOS"
+        includes:
+          - "**/*.storyboard"
+          - "**/*.xib"
+          - "**/*.xcassets"
+          - "**/*.strings"
+          - "**/*.ttf"
+          - "**/*.swift"
+          - "**/*.json"
+          - "**/*.h"
+          - "**/*.m"
+          - "**/*.html"
+          - "**/*.bundle"
+          - "**/*.xcdatamodeld"
+          - "SSLPinning/*.der"
+      - path: PrivyLearnmacOS
+        includes:
+          - "Info.plist"
+          - "*.entitlements"
+        buildPhase: none
+    settings:
+      IPHONEOS_DEPLOYMENT_TARGET: "13.0"
+      PRODUCT_MODULE_NAME: PrivyLearn
+      PRODUCT_BUNDLE_IDENTIFIER: $(APP_PRODUCT_BUNDLE_IDENTIFIER)
+      INFOPLIST_FILE: PrivyLearniOS/Info.plist
+      ENABLE_BITCODE: YES
+    entitlements:
+      path: PrivyLearniOS/PrivyLearn.entitlements
+      properties:
+        aps-environment: development
+    dependencies: []
+  PrivyLearnmacOS:
+    type: application
+    platform: macOS
+    postBuildScripts: []
+    sources:
+      - path: "PrivyLearnmacOS"
+        includes:
+          - "**/*.swift"
+          - "**/*.xcassets"
+      - path: PrivyLearnmacOS
+        includes:
+          - "*.entitlements"
+        buildPhase: none
+    settings:
+      OSX_DEPLOYMENT_TARGET: "10.15"
+      PRODUCT_MODULE_NAME: PrivyLearn
+      PRODUCT_BUNDLE_IDENTIFIER: $(APP_PRODUCT_BUNDLE_IDENTIFIER)
+      INFOPLIST_FILE: PrivyLearnmacOS/Info.plist
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_IDENTITY: "-" #run locally
+      PROVISIONING_PROFILE_SPECIFIER: ""
+    entitlements:
+      path: PrivyLearnmacOS/PrivyLearnmacOS.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.files.user-selected.read-only: true
+    dependencies: []
+schemes:
+  PrivyLearniOS:
+    build:
+      targets:
+        PrivyLearniOS: all
+    run:
+      config: Debug-IDE
+    profile:
+      config: Release (QA)
+    analyze:
+      config: Debug-IDE
+    archive:
+      config: Release (QA)
