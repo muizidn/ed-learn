@@ -1,0 +1,14 @@
+/* 
+  Localization.strings
+  Pods
+
+  Created by Muhammad Muizzsudin on 13/12/21.
+  
+*/
+
+title = "Registration";
+description = "Prepare the following documents for the registration. This process may take up to 30 minutes.";
+id_card = "ID Card";
+phone_number = "Phone Number";
+email_addr = "Email Address";
+continue = "Continue";
