@@ -1,0 +1,62 @@
+name: EDLearn
+configs:
+  # issue https://gitlab.EDLearn.id/EDLearn-mobile/super-EDLearn/-/issues/673
+  Debug: debug
+  Debug-IDE: debug
+  Release (QA): release
+  Release (AppStore): release
+configFiles:
+  Debug: xcconfig/Debug.xcconfig
+  Debug-IDE: xcconfig/Debug.xcconfig
+  Release (QA): xcconfig/Release.xcconfig
+  Release (AppStore): xcconfig/Release-AppStore.xcconfig
+settings:
+  MARKETING_VERSION: 3.6.0
+  CURRENT_PROJECT_VERSION: 1
+targets:
+  EDLearn:
+    type: application
+    platform: iOS
+    postBuildScripts: []
+    sources:
+      - path: "EDLearn/EDLearn"
+        includes:
+          - "**/*.storyboard"
+          - "**/*.xib"
+          - "**/*.xcassets"
+          - "**/*.strings"
+          - "**/*.ttf"
+          - "**/*.swift"
+          - "**/*.json"
+          - "**/*.h"
+          - "**/*.m"
+          - "**/*.html"
+          - "**/*.bundle"
+          - "**/*.xcdatamodeld"
+          - "SSLPinning/*.der"
+      - path: EDLearn/Info.plist
+        buildPhase: none
+    settings:
+      IPHONEOS_DEPLOYMENT_TARGET: "13.0"
+      PRODUCT_MODULE_NAME: EDLearn
+      PRODUCT_BUNDLE_IDENTIFIER: $(APP_PRODUCT_BUNDLE_IDENTIFIER)
+      INFOPLIST_FILE: EDLearn/Info.plist
+      ENABLE_BITCODE: YES
+    entitlements:
+      path: EDLearn/EDLearn.entitlements
+      properties:
+        aps-environment: development
+    dependencies: []
+schemes:
+  EDLearn:
+    build:
+      targets:
+        EDLearn: all
+    run:
+      config: Debug-IDE
+    profile:
+      config: Release (QA)
+    analyze:
+      config: Debug-IDE
+    archive:
+      config: Release (QA)
