@@ -1,6 +1,6 @@
 source 'https://github.com/CocoaPods/Specs'
 
-platform :ios, '13.0'
+platform :osx, '10.15'
 
 use_frameworks!
 inhibit_all_warnings!
@@ -28,9 +28,11 @@ end
 
 target 'EDLearn' do 
     project 'EDLearn.project'
-    devtools
-    pod 'DomainModule', :path => 'Modules/DomainModule', :testspecs => ['Tests', 'UITests'] 
-    pod 'Reusables', :path => 'Modules/Reusables', :testspecs => ['Tests', 'UITests']
-    pod 'LivePreviewer', :path => 'Modules/LivePreviewer'
-    pod 'ThirdPartyLibraries', :path => 'Modules/ThirdPartyLibraries', :testspecs => ['Tests', 'UITests']
+    pod 'EssentialDeveloper', :path => 'Modules/EssentialDeveloper', :testspecs => ['Tests']
+    pod 'EssentialDeveloperUI', :path => 'Modules/EssentialDeveloper', :testspecs => ['UITests']
+    # devtools
+    # pod 'DomainModule', :path => 'Modules/DomainModule', :testspecs => ['Tests', 'UITests'] 
+    # pod 'Reusables', :path => 'Modules/Reusables', :testspecs => ['Tests', 'UITests']
+    # pod 'LivePreviewer', :path => 'Modules/LivePreviewer'
+    # pod 'ThirdPartyLibraries', :path => 'Modules/ThirdPartyLibraries', :testspecs => ['Tests', 'UITests']
 end

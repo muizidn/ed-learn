@@ -1,0 +1,12 @@
+strings:
+  inputs: UIModule/id.lproj/Localization.strings
+  outputs:
+    templateName: structured-swift5
+    output: UIModule/Generated/Generated+Strings.swift
+xcassets:
+  inputs: 
+    - UIModule/Images.xcassets
+    - UIModule/Colors.xcassets
+  outputs:
+    templateName: swift5
+    output: UIModule/Generated/Generated+Assets.swift

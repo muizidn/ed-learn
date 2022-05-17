@@ -11,12 +11,12 @@ configFiles:
   Release (QA): xcconfig/Release.xcconfig
   Release (AppStore): xcconfig/Release-AppStore.xcconfig
 settings:
-  MARKETING_VERSION: 3.6.0
+  MARKETING_VERSION: 1.0.0
   CURRENT_PROJECT_VERSION: 1
 targets:
   EDLearn:
     type: application
-    platform: iOS
+    platform: macOS
     postBuildScripts: []
     sources:
       - path: "EDLearn/EDLearn"
@@ -37,7 +37,7 @@ targets:
       - path: EDLearn/Info.plist
         buildPhase: none
     settings:
-      IPHONEOS_DEPLOYMENT_TARGET: "13.0"
+      MACOS_DEPLOYMENT_TARGET: "13.0"
       PRODUCT_MODULE_NAME: EDLearn
       PRODUCT_BUNDLE_IDENTIFIER: $(APP_PRODUCT_BUNDLE_IDENTIFIER)
       INFOPLIST_FILE: EDLearn/Info.plist
