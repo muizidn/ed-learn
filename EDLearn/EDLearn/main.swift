@@ -6,6 +6,6 @@
 //
 
 import Foundation
-import EssentialDeveloper
+import EssentialFeed
 
 print("Hello World!")

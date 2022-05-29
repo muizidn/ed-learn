@@ -28,8 +28,8 @@ end
 
 target 'EDLearn' do 
     project 'EDLearn.project'
-    pod 'EssentialDeveloper', :path => 'Modules/EssentialDeveloper', :testspecs => ['Tests']
-    pod 'EssentialDeveloperUI', :path => 'Modules/EssentialDeveloper', :testspecs => ['UITests']
+    pod 'EssentialFeed', :path => 'Modules/EssentialFeed', :testspecs => ['Tests']
+    pod 'EssentialFeedUI', :path => 'Modules/EssentialFeed', :testspecs => ['UITests']
     # devtools
     # pod 'DomainModule', :path => 'Modules/DomainModule', :testspecs => ['Tests', 'UITests'] 
     # pod 'Reusables', :path => 'Modules/Reusables', :testspecs => ['Tests', 'UITests']

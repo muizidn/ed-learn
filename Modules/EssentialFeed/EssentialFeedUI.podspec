@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
-    s.name         = "EssentialDeveloperUI"
+    s.name         = "EssentialFeedUI"
     s.version      = "0.1-dev-internal"
-    s.summary      = "A short description of EssentialDeveloperUI."
-    s.description  = "A long description of EssentialDeveloperUI"
+    s.summary      = "A short description of EssentialFeedUI."
+    s.description  = "A long description of EssentialFeedUI"
     s.homepage     = "https://github.com/muizidn/ed-learn"
     s.license      = { :type => 'Proprietary' }
     s.author       = { 'muizidn' => 'muiz.idn@gmail.com' }

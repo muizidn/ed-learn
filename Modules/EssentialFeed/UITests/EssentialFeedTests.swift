@@ -1,6 +1,6 @@
 import XCTest
 
-final class EssentialDeveloperTests: XCTestCase {
+final class EssentialFeedTests: XCTestCase {
     override func setUp() {
         super.setUp()
     }
