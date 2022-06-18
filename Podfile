@@ -24,7 +24,7 @@ def devtools
 end
 
 target 'FullbackiOS' do 
-    platform :ios, '13.0'
+    platform :ios, '12.0'
     project 'Fullback.project'
     use_frameworks!
     devtools

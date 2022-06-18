@@ -61,5 +61,9 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>NSMainStoryboardFile</key>
+	<string>Main</string>
+    <key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>
