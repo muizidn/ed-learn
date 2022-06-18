@@ -8,14 +8,9 @@ Pod::Spec.new do |s|
     s.author       = { 'muizidn' => 'muiz.idn@gmail.com' }
     s.source       = { :git => "", :tag => s.version }
     s.source_files = "DomainModule/**/*.{swift}"
-    s.resources    = [
-      'DomainModule/**/*.{storyboard,xib,xcassets,strings}',
-      'DomainModule/**/*.ttf'
-    ]
-    
-    s.dependency "LivePreviewer"
-    s.dependency "Reusables"
 
+    s.ios.deployment_target  = '9.0'
+    s.osx.deployment_target  = '10.15'
       
     s.test_spec 'Tests' do |s|
       s.source_files = 'Tests/**/*.swift'

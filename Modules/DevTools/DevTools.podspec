@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name          = "DevTools"
   s.version       = "0.1-dev-internal"
-  s.summary       = "DevTools module for EDLearn"
+  s.summary       = "DevTools module for Fullback"
   s.homepage      = "https://github.com/muizidn/ed-learn/"
   s.license      = { :type => 'Proprietary' }
   s.author       = { 'muizidn' => 'muiz.idn@gmail.com' }

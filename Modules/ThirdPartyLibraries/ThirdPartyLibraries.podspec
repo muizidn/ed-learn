@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name          = "ThirdPartyLibraries"
   s.version       = "0.1-dev-internal"
-  s.summary       = "ThirdPartyLibraries module for EDLearn"
+  s.summary       = "ThirdPartyLibraries module for Fullback"
   s.homepage      = "https://github.com/muizidn/ed-learn/"
   s.license      = { :type => 'Proprietary' }
   s.author       = { 'muizidn' => 'muiz.idn@gmail.com' }

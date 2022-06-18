@@ -1,6 +1,6 @@
-name: EDLearn
+name: Fullback
 configs:
-  # issue https://gitlab.EDLearn.id/EDLearn-mobile/super-EDLearn/-/issues/673
+  # issue https://gitlab.Fullback.id/Fullback-mobile/super-Fullback/-/issues/673
   Debug: debug
   Debug-IDE: debug
   Release (QA): release
@@ -14,12 +14,12 @@ settings:
   MARKETING_VERSION: 3.6.0
   CURRENT_PROJECT_VERSION: 1
 targets:
-  EDLearn:
+  FullbackiOS:
     type: application
     platform: iOS
     postBuildScripts: []
     sources:
-      - path: "EDLearn/EDLearn"
+      - path: "FullbackiOS"
         includes:
           - "**/*.storyboard"
           - "**/*.xib"
@@ -34,24 +34,54 @@ targets:
           - "**/*.bundle"
           - "**/*.xcdatamodeld"
           - "SSLPinning/*.der"
-      - path: EDLearn/Info.plist
+      - path: FullbackmacOS
+        includes:
+          - "Info.plist"
+          - "*.entitlements"
         buildPhase: none
     settings:
       IPHONEOS_DEPLOYMENT_TARGET: "13.0"
-      PRODUCT_MODULE_NAME: EDLearn
+      PRODUCT_MODULE_NAME: Fullback
       PRODUCT_BUNDLE_IDENTIFIER: $(APP_PRODUCT_BUNDLE_IDENTIFIER)
-      INFOPLIST_FILE: EDLearn/Info.plist
+      INFOPLIST_FILE: FullbackiOS/Info.plist
       ENABLE_BITCODE: YES
     entitlements:
-      path: EDLearn/EDLearn.entitlements
+      path: FullbackiOS/Fullback.entitlements
       properties:
         aps-environment: development
     dependencies: []
+  FullbackmacOS:
+    type: application
+    platform: macOS
+    postBuildScripts: []
+    sources:
+      - path: "FullbackmacOS"
+        includes:
+          - "**/*.swift"
+          - "**/*.xcassets"
+      - path: FullbackmacOS
+        includes:
+          - "*.entitlements"
+        buildPhase: none
+    settings:
+      OSX_DEPLOYMENT_TARGET: "10.15"
+      PRODUCT_MODULE_NAME: Fullback
+      PRODUCT_BUNDLE_IDENTIFIER: $(APP_PRODUCT_BUNDLE_IDENTIFIER)
+      INFOPLIST_FILE: FullbackmacOS/Info.plist
+      DEVELOPMENT_TEAM: ""
+      CODE_SIGN_IDENTITY: "-" #run locally
+      PROVISIONING_PROFILE_SPECIFIER: ""
+    entitlements:
+      path: FullbackmacOS/FullbackmacOS.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.files.user-selected.read-only: true
+    dependencies: []
 schemes:
-  EDLearn:
+  FullbackiOS:
     build:
       targets:
-        EDLearn: all
+        FullbackiOS: all
     run:
       config: Debug-IDE
     profile:

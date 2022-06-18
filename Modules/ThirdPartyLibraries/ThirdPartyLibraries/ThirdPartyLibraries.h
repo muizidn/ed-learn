@@ -3,7 +3,7 @@
 //  ThirdPartyLibraries
 //
 //  Created by Marsudi Widodo on 16/12/19.
-//  Copyright © 2019 EDLearn. All rights reserved.
+//  Copyright © 2019 Fullback. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>

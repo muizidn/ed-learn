@@ -1,9 +1,9 @@
 //
 //  ReusableInfiniteLoadingView.swift
-//  EDLearn
+//  Fullback
 //
 //  Created by Muiz on 02/07/21.
-//  Copyright © 2021 EDLearn. All rights reserved.
+//  Copyright © 2021 Fullback. All rights reserved.
 //
 
 import UIKit

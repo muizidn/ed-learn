@@ -1,6 +1,6 @@
 //
 //  EasyScrollView.swift
-//  EDLearn
+//  Fullback
 //
 //  Created by Muiz on 23/08/21.
 //
