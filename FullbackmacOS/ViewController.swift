@@ -23,6 +23,6 @@ final class ViewController: NSViewController {
         renderer = Renderer(device: metalView.device!)
         metalView.delegate = renderer
         
-        metalView.clearColor = MTLClearColor(red: 1, green: 0, blue: 0, alpha: 1)
+        metalView.clearColor = MTLClearColor(red: 0, green: 1, blue: 0, alpha: 1)
     }
 }
