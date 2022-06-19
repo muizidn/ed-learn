@@ -1,0 +1,12 @@
+strings:
+  inputs: MetalRendererModule/id.lproj/Localization.strings
+  outputs:
+    templateName: structured-swift5
+    output: MetalRendererModule/Generated/Generated+Strings.swift
+xcassets:
+  inputs: 
+    - MetalRendererModule/Images.xcassets
+    - MetalRendererModule/Colors.xcassets
+  outputs:
+    templateName: swift5
+    output: MetalRendererModule/Generated/Generated+Assets.swift

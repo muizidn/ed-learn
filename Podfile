@@ -28,7 +28,7 @@ target 'FullbackiOS' do
     project 'Fullback.project'
     use_frameworks!
     devtools
-    pod 'DomainModule', :path => 'Modules/DomainModule', :testspecs => ['Tests', 'UITests'] 
+    pod 'MetalRendererModule', :path => 'Modules/MetalRendererModule', :testspecs => ['Tests', 'UITests'] 
     pod 'Reusables', :path => 'Modules/Reusables', :testspecs => ['Tests', 'UITests']
     pod 'LivePreviewer', :path => 'Modules/LivePreviewer'
     pod 'ThirdPartyLibraries', :path => 'Modules/ThirdPartyLibraries', :testspecs => ['Tests', 'UITests']
@@ -37,5 +37,5 @@ end
 target 'FullbackmacOS' do
   platform :osx, '10.15' 
   project 'Fullback.project'
-  pod 'DomainModule', :path => 'Modules/DomainModule', :testspecs => ['Tests', 'UITests'] 
+  pod 'MetalRendererModule', :path => 'Modules/MetalRendererModule', :testspecs => ['Tests', 'UITests'] 
 end
