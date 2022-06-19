@@ -13,13 +13,27 @@ public final class Renderer: NSObject {
     private let device: MTLDevice
     
     private var vertices: [Float] = [
-        0, 1, 0,
-        -1, -1, 0,
-        1, -1, 0
+        -1, 1, 0,       // v0
+         -1, -1, 0,     // v1
+         1, -1, 0,       // v2
+         1, 1, 0,       // v3
     ]
+    
+    private var indices: [UInt16] = [
+        0, 1, 2,
+        2, 3, 0
+    ]
+    
+    private struct Constants {
+        var animatedBy: Float = 0.0
+    }
+    
+    private var constants = Constants()
+    private var time: Float = 0
     
     private var pipelineState: MTLRenderPipelineState!
     private var vertexBuffer: MTLBuffer!
+    private var indexBuffer: MTLBuffer!
     
     public init(device: MTLDevice) {
         self.device = device
@@ -33,6 +47,9 @@ public final class Renderer: NSObject {
         vertexBuffer = device.makeBuffer(bytes: vertices,
                                          length: vertices.count * MemoryLayout<Float>.size,
                                          options: [])
+        indexBuffer = device.makeBuffer(bytes: indices,
+                                        length: indices.count * MemoryLayout<UInt16>.size,
+                                        options: [])
     }
     
     private func buildPipelineState() {
@@ -63,14 +80,21 @@ extension Renderer: MTKViewDelegate {
         let encoder = commandBuffer.makeRenderCommandEncoder(
             descriptor: view.currentRenderPassDescriptor!)!
         
+        time += 1 / Float(view.preferredFramesPerSecond)
+        constants.animatedBy = abs(sin(time)/2 + 0.5)
+        
         encoder.setRenderPipelineState(pipelineState)
         encoder.setVertexBuffer(vertexBuffer,
                                 offset: 0,
                                 index: 0)
-        encoder.drawPrimitives(type: .triangle,
-                               vertexStart: 0,
-                               vertexCount: vertices.count)
-        
+        encoder.setVertexBytes(&constants,
+                               length: MemoryLayout<Constants>.stride,
+                               index: 1)
+        encoder.drawIndexedPrimitives(type: .triangle,
+                                      indexCount: indices.count,
+                                      indexType: .uint16,
+                                      indexBuffer: indexBuffer,
+                                      indexBufferOffset: 0)
         encoder.endEncoding()
         commandBuffer.present(view.currentDrawable!)
         commandBuffer.commit()
