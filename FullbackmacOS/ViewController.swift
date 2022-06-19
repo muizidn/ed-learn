@@ -7,6 +7,7 @@
 
 import Cocoa
 import MetalKit
+import MetalRendererModule
 
 final class ViewController: NSViewController {
 

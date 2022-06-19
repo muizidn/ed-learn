@@ -8,21 +8,21 @@
 import Foundation
 import MetalKit
 
-final class Renderer: NSObject {
+public final class Renderer: NSObject {
     private var commandQueue: MTLCommandQueue!
     
-    init(device: MTLDevice) {
+    public init(device: MTLDevice) {
         super.init()
         commandQueue = device.makeCommandQueue()
     }
 }
 
 extension Renderer: MTKViewDelegate {
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+    public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         
     }
     
-    func draw(in view: MTKView) {
+    public func draw(in view: MTKView) {
         let commandBuffer = commandQueue.makeCommandBuffer()!
         let encoder = commandBuffer.makeRenderCommandEncoder(
             descriptor: view.currentRenderPassDescriptor!)!
