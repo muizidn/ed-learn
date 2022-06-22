@@ -1,14 +1,9 @@
 import XCTest
 import DomainModule
 
-final class HTTPClient {
+final class HTTPClientSpy: HTTPClient {
     var urls = [URL]()
     var completions = [(HTTPClientResponse) -> Void]()
-    
-    enum HTTPClientResponse {
-        case data(Data)
-        case error(Error)
-    }
     
     func load(url: URL, completion: @escaping (HTTPClientResponse) -> Void) {
         urls.append(url)
@@ -26,35 +21,6 @@ final class HTTPClient {
             self.completions[index](.error(error))
         }
     }
-}
-
-final class RemoteLoadDocument: LoadDocument {
-    let httpClient: HTTPClient
-    let url: URL
-    
-    init(url: URL = URL(string: "https://a.com")!, httpClient: HTTPClient) {
-        self.url = url
-        self.httpClient = httpClient
-    }
-    
-    func load(completion: @escaping (LoadDocumentResult) -> Void) {
-        httpClient.load(url: url) { response in
-            switch response {
-            case .data(let data):
-                let parsed = try! JSONDecoder().decode([CodableDocument].self, from: data)
-                let documents = parsed.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })
-                completion(.success(documents))
-            case .error(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-}
-
-struct CodableDocument: Codable {
-    let token: String
-    let status: Bool
-    let enterprise: String?
 }
 
 final class DomainModuleTests: XCTestCase {
@@ -82,7 +48,7 @@ final class DomainModuleTests: XCTestCase {
     }
     
     func test_loadURL_httpClientLoadFromTheURLInCorrectOrder() {
-        let httpClient = HTTPClient()
+        let httpClient = HTTPClientSpy()
         let url1 = URL(string: "https://a-url.com")!
         let sut1 = RemoteLoadDocument(
             url: url1,
@@ -214,8 +180,8 @@ final class DomainModuleTests: XCTestCase {
     }
     
     
-    private func makeSUT() -> (sut: RemoteLoadDocument, client: HTTPClient){
-        let httpClient = HTTPClient()
+    private func makeSUT() -> (sut: RemoteLoadDocument, client: HTTPClientSpy){
+        let httpClient = HTTPClientSpy()
         let sut = RemoteLoadDocument(httpClient: httpClient)
         return (sut, httpClient)
     }
