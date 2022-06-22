@@ -41,16 +41,24 @@ final class DomainModuleTests: XCTestCase {
         XCTAssertEqual(httpClient.urls.count, 2)
     }
     
-    func test_loadURL_httpClientLoadFromTheURL() {
+    func test_loadURL_httpClientLoadFromTheURLInCorrectOrder() {
         let httpClient = HTTPClient()
-        let url = URL(string: "https://a-url.com")!
-        let sut = RemoteLoadDocument(
-            url: url,
+        let url1 = URL(string: "https://a-url.com")!
+        let sut1 = RemoteLoadDocument(
+            url: url1,
             httpClient: httpClient
         )
         
-        sut.load()
+        sut1.load()
         
-        XCTAssertEqual(httpClient.urls, [url])
+        let url2 = URL(string: "https://foo-url.com")!
+        let sut2 = RemoteLoadDocument(
+            url: url2,
+            httpClient: httpClient
+        )
+        
+        sut2.load()
+        
+        XCTAssertEqual(httpClient.urls, [url1, url2])
     }
 }
