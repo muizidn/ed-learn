@@ -1,11 +1,9 @@
 import XCTest
 
 final class HTTPClient {
-    var loadCount = 0
     var urls = [URL]()
     
     func load(url: URL) {
-        loadCount += 1
         urls.append(url)
     }
 }
@@ -40,7 +38,7 @@ final class DomainModuleTests: XCTestCase {
         sut.load()
         sut.load()
         
-        XCTAssertEqual(httpClient.loadCount, 2)
+        XCTAssertEqual(httpClient.urls.count, 2)
     }
     
     func test_loadURL_httpClientLoadFromTheURL() {
