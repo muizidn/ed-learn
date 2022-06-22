@@ -117,10 +117,10 @@ final class DomainModuleTests: XCTestCase {
             switch result {
             case .success(let documents):
                 resultDocuments = documents
+                exp.fulfill()
             case .failure:
                 break
             }
-            exp.fulfill()
         }
         
         let json = [
@@ -148,10 +148,10 @@ final class DomainModuleTests: XCTestCase {
                 switch res {
                 case .success(let array):
                     result += array
+                    exp.fulfill()
                 case .failure:
                     break
                 }
-                exp.fulfill()
             }
             
             let json = [
@@ -171,10 +171,10 @@ final class DomainModuleTests: XCTestCase {
                 switch res {
                 case .success(let array):
                     result += array
+                    exp.fulfill()
                 case .failure:
                     break
                 }
-                exp.fulfill()
             }
             
             let json = [
