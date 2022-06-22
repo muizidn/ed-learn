@@ -32,34 +32,18 @@ final class DomainModuleTests: XCTestCase {
         XCTAssertTrue(httpClient.urls.isEmpty)
     }
     
-    func test_loadTwice_httpClientLoadTwice() {
-        let (sut, httpClient) = makeSUT()
-        
-        sut.load { _ in }
-        sut.load { _ in }
-        
-        XCTAssertEqual(httpClient.urls.count, 2)
-    }
-    
     func test_loadURL_httpClientLoadFromTheURLInCorrectOrder() {
         let httpClient = HTTPClientSpy()
-        let url1 = URL(string: "https://a-url.com")!
-        let sut1 = RemoteLoadDocument(
-            url: url1,
+        let url = URL(string: "https://a-url.com")!
+        let sut = RemoteLoadDocument(
+            url: url,
             httpClient: httpClient
         )
         
-        sut1.load { _ in }
+        sut.load { _ in }
+        sut.load { _ in }
         
-        let url2 = URL(string: "https://foo-url.com")!
-        let sut2 = RemoteLoadDocument(
-            url: url2,
-            httpClient: httpClient
-        )
-        
-        sut2.load { _ in }
-        
-        XCTAssertEqual(httpClient.urls, [url1, url2])
+        XCTAssertEqual(httpClient.urls, [url, url])
     }
     
     func test_httpClientReturnData_LoadRemoteReturnsDocuments() {
