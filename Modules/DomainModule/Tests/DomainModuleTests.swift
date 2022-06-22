@@ -10,15 +10,9 @@ final class HTTPClientSpy: HTTPClient {
         completions.append(completion)
     }
     
-    func completeWithData(index: Int, data: Data) {
+    func completeWith(index: Int, response: HTTPClientResponse) {
         DispatchQueue.main.async { [unowned self] in
-            self.completions[index](.data(data))
-        }
-    }
-    
-    func completeWithError(index: Int, error: Error) {
-        DispatchQueue.main.async { [unowned self] in
-            self.completions[index](.error(error))
+            self.completions[index](response)
         }
     }
 }
@@ -90,7 +84,7 @@ final class DomainModuleTests: XCTestCase {
             "enterprise": "foo"
         ] as [String : Any]
         let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
-        httpClient.completeWithData(index: 0, data: jsonData)
+        httpClient.completeWith(index: 0, response: .data(jsonData))
         
         wait(for: [exp], timeout: 10.0)
 
@@ -121,7 +115,7 @@ final class DomainModuleTests: XCTestCase {
                 "enterprise": "foo"
             ] as [String : Any]
             let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
-            httpClient.completeWithData(index: 0, data: jsonData)
+            httpClient.completeWith(index: 0, response: .data(jsonData))
             
             wait(for: [exp], timeout: 10.0)
         }
@@ -144,7 +138,7 @@ final class DomainModuleTests: XCTestCase {
                 "enterprise": nil
             ] as [String : Any?]
             let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
-            httpClient.completeWithData(index: 1, data: jsonData)
+            httpClient.completeWith(index: 1, response: .data(jsonData))
             
             wait(for: [exp], timeout: 10.0)
         }
@@ -172,7 +166,7 @@ final class DomainModuleTests: XCTestCase {
                 exp.fulfill()
             }
         }
-        httpClient.completeWithError(index: 0, error: error)
+        httpClient.completeWith(index: 0, response: .error(error))
         
         wait(for: [exp], timeout: 10.0)
         
