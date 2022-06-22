@@ -32,8 +32,7 @@ final class DomainModuleTests: XCTestCase {
     }
     
     func test_loadTwice_httpClientLoadTwice() {
-        let httpClient = HTTPClient()
-        let sut = RemoteLoadDocument(httpClient: httpClient)
+        let (sut, httpClient) = makeSUT()
         
         sut.load()
         sut.load()
@@ -60,5 +59,12 @@ final class DomainModuleTests: XCTestCase {
         sut2.load()
         
         XCTAssertEqual(httpClient.urls, [url1, url2])
+    }
+    
+    
+    private func makeSUT() -> (sut: RemoteLoadDocument, client: HTTPClient){
+        let httpClient = HTTPClient()
+        let sut = RemoteLoadDocument(httpClient: httpClient)
+        return (sut, httpClient)
     }
 }
