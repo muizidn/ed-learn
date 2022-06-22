@@ -1,10 +1,24 @@
 import XCTest
+import DomainModule
 
 final class HTTPClient {
     var urls = [URL]()
+    var completions = [(HTTPClientResponse) -> Void]()
     
-    func load(url: URL) {
+    enum HTTPClientResponse {
+        case data(Data)
+        case error(Error)
+    }
+    
+    func load(url: URL, completion: @escaping (HTTPClientResponse) -> Void) {
         urls.append(url)
+        completions.append(completion)
+    }
+    
+    func completeWithData(data: Data) {
+        DispatchQueue.main.async { [unowned self] in
+            self.completions[0](.data(data))
+        }
     }
 }
 
@@ -17,9 +31,23 @@ final class RemoteLoadDocument {
         self.httpClient = httpClient
     }
     
-    func load() {
-        httpClient.load(url: url)
+    func load(completion: @escaping ([Document]) -> Void) {
+        httpClient.load(url: url) { response in
+            switch response {
+            case .data(let data):
+                let parsed = try! JSONDecoder().decode([CodableDocument].self, from: data)
+                completion(parsed.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) }))
+            case .error(let error):
+                break
+            }
+        }
     }
+}
+
+struct CodableDocument: Codable {
+    let token: String
+    let status: Bool
+    let enterprise: String?
 }
 
 final class DomainModuleTests: XCTestCase {
@@ -40,8 +68,8 @@ final class DomainModuleTests: XCTestCase {
     func test_loadTwice_httpClientLoadTwice() {
         let (sut, httpClient) = makeSUT()
         
-        sut.load()
-        sut.load()
+        sut.load { _ in }
+        sut.load { _ in }
         
         XCTAssertEqual(httpClient.urls.count, 2)
     }
@@ -54,7 +82,7 @@ final class DomainModuleTests: XCTestCase {
             httpClient: httpClient
         )
         
-        sut1.load()
+        sut1.load { _ in }
         
         let url2 = URL(string: "https://foo-url.com")!
         let sut2 = RemoteLoadDocument(
@@ -62,9 +90,33 @@ final class DomainModuleTests: XCTestCase {
             httpClient: httpClient
         )
         
-        sut2.load()
+        sut2.load { _ in }
         
         XCTAssertEqual(httpClient.urls, [url1, url2])
+    }
+    
+    func test_httpClientReturnData_LoadRemoteReturnsDocuments() {
+        let (sut, httpClient) = makeSUT()
+        
+
+        let exp = expectation(description: "load documents")
+        var result = [Document]()
+        sut.load { documents in
+            result = documents
+            exp.fulfill()
+        }
+        
+        let json = [
+            "token": "abc",
+            "status": true,
+            "enterprise": "foo"
+        ] as [String : Any]
+        let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
+        httpClient.completeWithData(data: jsonData)
+        
+        wait(for: [exp], timeout: 10.0)
+
+        XCTAssertEqual(result, [Document(token: "abc", status: true, enterprise: "foo")])
     }
     
     
@@ -72,5 +124,12 @@ final class DomainModuleTests: XCTestCase {
         let httpClient = HTTPClient()
         let sut = RemoteLoadDocument(httpClient: httpClient)
         return (sut, httpClient)
+    }
+}
+
+
+extension Document: Equatable {
+    public static func == (lhs: Document, rhs: Document) -> Bool {
+        return "\(lhs)" == "\(rhs)"
     }
 }
