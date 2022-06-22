@@ -31,6 +31,12 @@ final class DomainModuleTests: XCTestCase {
         super.tearDown()
     }
     
+    func test_notLoad_httpClientNotLoad() {
+        let (_, httpClient) = makeSUT()
+        
+        XCTAssertTrue(httpClient.urls.isEmpty)
+    }
+    
     func test_loadTwice_httpClientLoadTwice() {
         let (sut, httpClient) = makeSUT()
         
