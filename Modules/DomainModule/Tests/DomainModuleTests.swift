@@ -15,9 +15,9 @@ final class HTTPClient {
         completions.append(completion)
     }
     
-    func completeWithData(data: Data) {
+    func completeWithData(index: Int, data: Data) {
         DispatchQueue.main.async { [unowned self] in
-            self.completions[0](.data(data))
+            self.completions[index](.data(data))
         }
     }
 }
@@ -112,11 +112,59 @@ final class DomainModuleTests: XCTestCase {
             "enterprise": "foo"
         ] as [String : Any]
         let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
-        httpClient.completeWithData(data: jsonData)
+        httpClient.completeWithData(index: 0, data: jsonData)
         
         wait(for: [exp], timeout: 10.0)
 
         XCTAssertEqual(result, [Document(token: "abc", status: true, enterprise: "foo")])
+    }
+    
+    func test_httpClientReturnData_LoadRemoteReturnsDocumentsInOrder() {
+        let (sut, httpClient) = makeSUT()
+        
+
+        var result = [Document]()
+        
+        do {
+            let exp = expectation(description: "load documents")
+            sut.load { documents in
+                result += documents
+                exp.fulfill()
+            }
+            
+            let json = [
+                "token": "abc",
+                "status": true,
+                "enterprise": "foo"
+            ] as [String : Any]
+            let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
+            httpClient.completeWithData(index: 0, data: jsonData)
+            
+            wait(for: [exp], timeout: 10.0)
+        }
+        
+        do {
+            let exp = expectation(description: "load documents")
+            sut.load { documents in
+                result += documents
+                exp.fulfill()
+            }
+            
+            let json = [
+                "token": "def",
+                "status": false,
+                "enterprise": nil
+            ] as [String : Any?]
+            let jsonData = try! JSONSerialization.data(withJSONObject: [json], options: [])
+            httpClient.completeWithData(index: 1, data: jsonData)
+            
+            wait(for: [exp], timeout: 10.0)
+        }
+
+        XCTAssertEqual(result, [
+            Document(token: "abc", status: true, enterprise: "foo"),
+            Document(token: "def", status: false, enterprise: nil)
+        ])
     }
     
     
