@@ -29,9 +29,13 @@ public final class RemoteLoadDocument: LoadDocument {
         httpClient.load(url: url) { response in
             switch response {
             case .data(let data):
-                let parsed = try! JSONDecoder().decode([CodableDocument].self, from: data)
-                let documents = parsed.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })
-                completion(.success(documents))
+                do {
+                    let parsed = try JSONDecoder().decode([CodableDocument].self, from: data)
+                    let documents = parsed.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })
+                    completion(.success(documents))
+                } catch {
+                    completion(.failure(error))
+                }
             case .error(let error):
                 completion(.failure(error))
             }
