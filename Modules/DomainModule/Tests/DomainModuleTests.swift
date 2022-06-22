@@ -20,6 +20,12 @@ final class HTTPClient {
             self.completions[index](.data(data))
         }
     }
+    
+    func completeWithError(index: Int, error: Error) {
+        DispatchQueue.main.async { [unowned self] in
+            self.completions[index](.error(error))
+        }
+    }
 }
 
 final class RemoteLoadDocument {
@@ -31,14 +37,20 @@ final class RemoteLoadDocument {
         self.httpClient = httpClient
     }
     
-    func load(completion: @escaping ([Document]) -> Void) {
+    enum LoadDocumentResult {
+        case success([Document])
+        case failure(Error)
+    }
+    
+    func load(completion: @escaping (LoadDocumentResult) -> Void) {
         httpClient.load(url: url) { response in
             switch response {
             case .data(let data):
                 let parsed = try! JSONDecoder().decode([CodableDocument].self, from: data)
-                completion(parsed.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) }))
+                let documents = parsed.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })
+                completion(.success(documents))
             case .error(let error):
-                break
+                completion(.failure(error))
             }
         }
     }
@@ -100,9 +112,14 @@ final class DomainModuleTests: XCTestCase {
         
 
         let exp = expectation(description: "load documents")
-        var result = [Document]()
-        sut.load { documents in
-            result = documents
+        var resultDocuments = [Document]()
+        sut.load { result  in
+            switch result {
+            case .success(let documents):
+                resultDocuments = documents
+            case .failure:
+                break
+            }
             exp.fulfill()
         }
         
@@ -116,7 +133,7 @@ final class DomainModuleTests: XCTestCase {
         
         wait(for: [exp], timeout: 10.0)
 
-        XCTAssertEqual(result, [Document(token: "abc", status: true, enterprise: "foo")])
+        XCTAssertEqual(resultDocuments, [Document(token: "abc", status: true, enterprise: "foo")])
     }
     
     func test_httpClientReturnData_LoadRemoteReturnsDocumentsInOrder() {
@@ -127,8 +144,13 @@ final class DomainModuleTests: XCTestCase {
         
         do {
             let exp = expectation(description: "load documents")
-            sut.load { documents in
-                result += documents
+            sut.load { res in
+                switch res {
+                case .success(let array):
+                    result += array
+                case .failure:
+                    break
+                }
                 exp.fulfill()
             }
             
@@ -145,8 +167,13 @@ final class DomainModuleTests: XCTestCase {
         
         do {
             let exp = expectation(description: "load documents")
-            sut.load { documents in
-                result += documents
+            sut.load { res in
+                switch res {
+                case .success(let array):
+                    result += array
+                case .failure:
+                    break
+                }
                 exp.fulfill()
             }
             
@@ -167,11 +194,39 @@ final class DomainModuleTests: XCTestCase {
         ])
     }
     
+    func test_httpClientError_remoteLoadError() {
+        let (sut, httpClient) = makeSUT()
+        
+        let error = anyError()
+        
+        let exp = expectation(description: "load documents then error")
+        
+        var errors = [NSError]()
+        sut.load { result in
+            switch result {
+            case .success:
+                break
+            case .failure(let error):
+                errors.append(error as NSError)
+                exp.fulfill()
+            }
+        }
+        httpClient.completeWithError(index: 0, error: error)
+        
+        wait(for: [exp], timeout: 10.0)
+        
+        XCTAssertEqual(errors, [error])
+    }
+    
     
     private func makeSUT() -> (sut: RemoteLoadDocument, client: HTTPClient){
         let httpClient = HTTPClient()
         let sut = RemoteLoadDocument(httpClient: httpClient)
         return (sut, httpClient)
+    }
+    
+    private func anyError() -> NSError {
+        NSError(domain: "httpclient", code: 1)
     }
 }
 
