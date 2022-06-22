@@ -3,8 +3,10 @@ import XCTest
 final class HTTPClient {
     static let shared = HTTPClient()
     
+    var loadCount = 0
+    
     func load() {
-        
+        loadCount += 1
     }
 }
 
@@ -29,7 +31,13 @@ final class DomainModuleTests: XCTestCase {
         super.tearDown()
     }
     
-    func test_example() {
+    func test_loadTwice_httpClientLoadTwice() {
+        let httpClient = HTTPClient.shared
+        let sut = RemoteLoadDocument(httpClient: httpClient)
         
+        sut.load()
+        sut.load()
+        
+        XCTAssertEqual(httpClient.loadCount, 2)
     }
 }
