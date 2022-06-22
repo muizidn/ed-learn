@@ -18,7 +18,12 @@ public struct Document {
     public let enterprise: String?
 }
 
-// belum final
-protocol LoadDocument {
-    func load() -> [Document]
+
+public enum LoadDocumentResult {
+    case success([Document])
+    case failure(Error)
+}
+
+public protocol LoadDocument {
+    func load(completion: @escaping (LoadDocumentResult) -> Void)
 }

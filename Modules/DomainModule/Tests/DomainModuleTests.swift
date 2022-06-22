@@ -28,18 +28,13 @@ final class HTTPClient {
     }
 }
 
-final class RemoteLoadDocument {
+final class RemoteLoadDocument: LoadDocument {
     let httpClient: HTTPClient
     let url: URL
     
     init(url: URL = URL(string: "https://a.com")!, httpClient: HTTPClient) {
         self.url = url
         self.httpClient = httpClient
-    }
-    
-    enum LoadDocumentResult {
-        case success([Document])
-        case failure(Error)
     }
     
     func load(completion: @escaping (LoadDocumentResult) -> Void) {
