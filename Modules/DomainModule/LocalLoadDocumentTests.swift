@@ -35,10 +35,19 @@ final class DocumentStore {
 final class LocalLoadDocumentTests: XCTestCase {
     
     func test_onInit_notSendMessage() {
-        let store = DocumentStore()
-        _ = LocalLoadDocument(store: store)
+        let (_, store) = makeSUT()
         
         XCTAssertTrue(store.messages.isEmpty)
     }
     
+    
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: DocumentStore) {
+        let store = DocumentStore()
+        let sut = LocalLoadDocument(store: store)
+        
+        trackMemory(sut, file: file, line: line)
+        trackMemory(store, file: file, line: line)
+        
+        return (sut, store)
+    }
 }
