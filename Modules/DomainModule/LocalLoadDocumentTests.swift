@@ -16,19 +16,19 @@ final class LocalLoadDocument {
     }
     
     func load() {
-        store.load()
+        store.retrieve()
     }
 }
 
 final class DocumentStore {
     enum Message {
-        case load
+        case retrieve
     }
     
     private(set) var messages: [Message] = []
     
-    func load() {
-        messages.append(.load)
+    func retrieve() {
+        messages.append(.retrieve)
     }
 }
 
@@ -38,6 +38,15 @@ final class LocalLoadDocumentTests: XCTestCase {
         let (_, store) = makeSUT()
         
         XCTAssertTrue(store.messages.isEmpty)
+    }
+    
+    func test_onLoadTwice_invokeStoreRetrieveTwice() {
+        let (sut, store) = makeSUT()
+        
+        sut.load()
+        sut.load()
+        
+        XCTAssertEqual(store.messages, [.retrieve, .retrieve])
     }
     
     
