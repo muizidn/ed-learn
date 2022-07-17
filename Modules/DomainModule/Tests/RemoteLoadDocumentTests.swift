@@ -158,9 +158,11 @@ final class RemoteLoadDocumentTests: XCTestCase {
     }
     
     
-    private func makeSUT() -> (sut: RemoteLoadDocument, client: HTTPClientSpy){
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: RemoteLoadDocument, client: HTTPClientSpy){
         let httpClient = HTTPClientSpy()
         let sut = RemoteLoadDocument(httpClient: httpClient)
+        trackMemory(sut, file: file, line: line)
+        trackMemory(httpClient, file: file, line: line)
         return (sut, httpClient)
     }
     
