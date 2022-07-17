@@ -1,6 +1,6 @@
 import XCTest
 
-final class DomainModuleTests: XCTestCase {
+final class RemoteLoadDocumentTests: XCTestCase {
     override func setUp() {
         super.setUp()
     }
