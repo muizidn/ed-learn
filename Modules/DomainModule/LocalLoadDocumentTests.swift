@@ -75,7 +75,13 @@ final class LocalLoadDocument {
     }
 }
 
-final class DocumentStore {
+protocol DocumentStore {
+    func retrieve(completion: @escaping (Result<[Document], Error>) -> Void)
+    func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void)
+    func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void)
+}
+
+final class CodableDocumentStore: DocumentStore {
     private(set) var retrievalMessages: [(Result<[Document], Error>) -> Void] = []
     private(set) var insertMessages: [(Result<Void, Error>) -> Void] = []
     private(set) var removeMessages: [(Result<Void, Error>) -> Void] = []
@@ -259,8 +265,8 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(results, [.failure(error)])
     }
     
-    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: DocumentStore) {
-        let store = DocumentStore()
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: CodableDocumentStore) {
+        let store = CodableDocumentStore()
         let sut = LocalLoadDocument(store: store)
         
         trackMemory(sut, file: file, line: line)
