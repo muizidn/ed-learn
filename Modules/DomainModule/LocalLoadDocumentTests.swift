@@ -10,16 +10,26 @@ import XCTest
 import DomainModule
 
 final class LocalLoadDocument {
+    enum RetrieveResult {
+        case empty
+        case found(documents: [Document])
+        case failure(Error)
+    }
+    
     private let store: DocumentStore
     init(store: DocumentStore) {
         self.store = store
     }
     
-    func load(completion: @escaping (LoadDocumentResult) -> Void) {
+    func retrieve(completion: @escaping (RetrieveResult) -> Void) {
         store.retrieve { result in
             switch result {
             case .success(let docs):
-                completion(.success(docs))
+                if docs.isEmpty {
+                    completion(.empty)
+                } else {
+                    completion(.found(documents: docs))
+                }
             case .failure(let error):
                 completion(.failure(error))
             }
@@ -58,52 +68,42 @@ final class LocalLoadDocumentTests: XCTestCase {
     func test_onLoadTwice_invokeStoreRetrieveTwice() {
         let (sut, store) = makeSUT()
         
-        sut.load { _ in }
-        sut.load { _ in }
+        sut.retrieve { _ in }
+        sut.retrieve { _ in }
         
         XCTAssertEqual(store.messages.map { $0.type }, [.retrieve, .retrieve])
     }
     
-    func test_storeEmpty_returnSuccessWithEmptyValue() {
+    func test_storeEmpty_deliverEmpty() {
         let (sut, store) = makeSUT()
         let exp = expectation(description: "load from store")
         
-        var documents = [Document]()
-        sut.load { result in
-            switch result {
-            case .success(let docs):
-                documents = docs
-                exp.fulfill()
-            case .failure:
-                break
-            }
+        var results = [LocalLoadDocument.RetrieveResult]()
+        sut.retrieve { result in
+            results.append(result)
+            exp.fulfill()
         }
         
         store.completeRetrival(idx: 0, with: .success([]))
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertTrue(documents.isEmpty)
+        XCTAssertEqual(results, [.empty])
     }
     
-    func test_storeNotEmpty_deliverDocumentsValue() {
+    func test_storeNotEmpty_deliverFoundDocumentsValue() {
         let (sut, store) = makeSUT()
         let exp = expectation(description: "load from store")
         
-        var documents = [Document]()
-        sut.load { result in
-            switch result {
-            case .success(let docs):
-                documents = docs
-                exp.fulfill()
-            case .failure:
-                break
-            }
+        var results = [LocalLoadDocument.RetrieveResult]()
+        sut.retrieve { result in
+            results.append(result)
+            exp.fulfill()
         }
         
         store.completeRetrival(idx: 0, with: .success([Document(token: "token1", status: true, enterprise: nil)]))
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(documents, [Document(token: "token1", status: true, enterprise: nil)])
+        XCTAssertEqual(results, [.found(documents: [Document(token: "token1", status: true, enterprise: nil)])])
     }
     
     
@@ -115,5 +115,11 @@ final class LocalLoadDocumentTests: XCTestCase {
         trackMemory(store, file: file, line: line)
         
         return (sut, store)
+    }
+}
+
+extension LocalLoadDocument.RetrieveResult: Equatable {
+    static func == (lhs: LocalLoadDocument.RetrieveResult, rhs: LocalLoadDocument.RetrieveResult) -> Bool {
+        return "\(lhs)" == "\(rhs)"
     }
 }
