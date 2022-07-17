@@ -165,10 +165,6 @@ final class RemoteLoadDocumentTests: XCTestCase {
         trackMemory(httpClient, file: file, line: line)
         return (sut, httpClient)
     }
-    
-    private func anyError() -> NSError {
-        NSError(domain: "httpclient", code: 1)
-    }
 }
 
 
