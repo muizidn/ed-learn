@@ -27,6 +27,11 @@ final class LocalLoadDocument {
         case failure(Error)
     }
     
+    enum RemoveResult {
+        case success
+        case failure(Error)
+    }
+    
     private let store: DocumentStore
     init(store: DocumentStore) {
         self.store = store
@@ -57,11 +62,23 @@ final class LocalLoadDocument {
             }
         }
     }
+    
+    func remove(tokens: [String], completion: @escaping (RemoveResult) -> Void) {
+        store.remove(tokens: tokens) { result in
+            switch result {
+            case .success:
+                completion(.success)
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
 }
 
 final class DocumentStore {
     private(set) var retrievalMessages: [(Result<[Document], Error>) -> Void] = []
     private(set) var insertMessages: [(Result<Void, Error>) -> Void] = []
+    private(set) var removeMessages: [(Result<Void, Error>) -> Void] = []
     
     func retrieve(completion: @escaping (Result<[Document], Error>) -> Void) {
         retrievalMessages.append(completion)
@@ -77,6 +94,14 @@ final class DocumentStore {
     
     func completeInsert(idx: Int, with result: Result<Void, Error>) {
         insertMessages[idx](result)
+    }
+    
+    func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void) {
+        removeMessages.append(completion)
+    }
+    
+    func completeRemove(idx: Int, with result: Result<Void, Error>) {
+        removeMessages[idx](result)
     }
 }
 
@@ -191,6 +216,49 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     
+    func test_onRemoveTwice_invokeStoreRemoveTwice() {
+        let (sut, store) = makeSUT()
+        
+        sut.remove(tokens:  []) { _ in }
+        sut.remove(tokens:  []) { _ in }
+        
+        XCTAssertEqual(store.removeMessages.count, 2)
+    }
+    
+    func test_storeSuccess_deliverRemoveSuccess() {
+        let (sut, store) = makeSUT()
+        let exp = expectation(description: "remove from store")
+        let docs = ["token1"]
+        
+        var results = [LocalLoadDocument.RemoveResult]()
+        sut.remove(tokens:  docs) { result in
+            results.append(result)
+            exp.fulfill()
+        }
+        
+        store.completeRemove(idx: 0, with: .success(()))
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(results, [.success])
+    }
+    
+    func test_storeError_deliverRemoveError() {
+        let (sut, store) = makeSUT()
+        let exp = expectation(description: "remove from store")
+        let error = anyError()
+        
+        var results = [LocalLoadDocument.RemoveResult]()
+        sut.remove(tokens:  []) { result in
+            results.append(result)
+            exp.fulfill()
+        }
+        
+        store.completeRemove(idx: 0, with: .failure(error))
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(results, [.failure(error)])
+    }
+    
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: DocumentStore) {
         let store = DocumentStore()
         let sut = LocalLoadDocument(store: store)
@@ -209,6 +277,12 @@ extension LocalLoadDocument.RetrieveResult: Equatable {
 }
 
 extension LocalLoadDocument.InsertResult: Equatable {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        return "\(lhs)" == "\(rhs)"
+    }
+}
+
+extension LocalLoadDocument.RemoveResult: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         return "\(lhs)" == "\(rhs)"
     }
