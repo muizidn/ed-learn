@@ -44,7 +44,7 @@ final class LocalLoadDocument {
                 if docs.isEmpty {
                     completion(.empty)
                 } else {
-                    completion(.found(documents: docs))
+                    completion(.found(documents: docs.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })))
                 }
             case .failure(let error):
                 completion(.failure(error))
@@ -76,7 +76,7 @@ final class LocalLoadDocument {
 }
 
 protocol DocumentStore {
-    func retrieve(completion: @escaping (Result<[Document], Error>) -> Void)
+    func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void)
     func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void)
     func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void)
 }
@@ -86,12 +86,23 @@ final class CodableDocumentStore: DocumentStore {
     private(set) var insertMessages: [(Result<Void, Error>) -> Void] = []
     private(set) var removeMessages: [(Result<Void, Error>) -> Void] = []
     
-    func retrieve(completion: @escaping (Result<[Document], Error>) -> Void) {
-        retrievalMessages.append(completion)
+    private let fileURL: URL
+    init(fileURL: URL) {
+        self.fileURL = fileURL
     }
     
-    func completeRetrival(idx: Int, with result: Result<[Document], Error>) {
-        retrievalMessages[idx](result)
+    func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void) {
+        do {
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                let data = try Data(contentsOf: fileURL)
+                let docs = try JSONDecoder().decode([LocalDocument].self, from: data)
+                completion(.success(docs))
+            } else {
+                completion(.success([]))
+            }
+        } catch {
+            completion(.failure(error))
+        }
     }
     
     func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void) {
@@ -113,6 +124,31 @@ final class CodableDocumentStore: DocumentStore {
 
 final class LocalLoadDocumentTests: XCTestCase {
     
+    private let fileURL = FileManager
+        .default
+        .urls(for: .cachesDirectory, in: .userDomainMask)
+        .first!
+        .appendingPathComponent("documents.Test.json")
+    
+    override func setUp() {
+        super.setUp()
+        resetFileURLBeforeRunTest()
+    }
+    
+    private func resetFileURLBeforeRunTest() {
+        try! FileManager.default.removeItem(at: fileURL)
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        clearFileURLAfterRunTest()
+    }
+    
+    private func clearFileURLAfterRunTest() {
+        try! FileManager.default.removeItem(at: fileURL)
+    }
+    
+    
     func test_onInit_notSendMessage() {
         let (_, store) = makeSUT()
         
@@ -120,17 +156,8 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertTrue(store.insertMessages.isEmpty)
     }
     
-    func test_onRetrieveTwice_invokeStoreRetrieveTwice() {
-        let (sut, store) = makeSUT()
-        
-        sut.retrieve { _ in }
-        sut.retrieve { _ in }
-        
-        XCTAssertEqual(store.retrievalMessages.count, 2)
-    }
-    
     func test_storeEmpty_deliverRetrieveEmpty() {
-        let (sut, store) = makeSUT()
+        let (sut, _) = makeSUT()
         let exp = expectation(description: "load from store")
         
         var results = [LocalLoadDocument.RetrieveResult]()
@@ -138,15 +165,13 @@ final class LocalLoadDocumentTests: XCTestCase {
             results.append(result)
             exp.fulfill()
         }
-        
-        store.completeRetrival(idx: 0, with: .success([]))
         
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(results, [.empty])
     }
     
     func test_storeNotEmpty_deliverFoundDocumentsValue() {
-        let (sut, store) = makeSUT()
+        let (sut, _) = makeSUT()
         let exp = expectation(description: "load from store")
         
         var results = [LocalLoadDocument.RetrieveResult]()
@@ -155,14 +180,12 @@ final class LocalLoadDocumentTests: XCTestCase {
             exp.fulfill()
         }
         
-        store.completeRetrival(idx: 0, with: .success([Document(token: "token1", status: true, enterprise: nil)]))
-        
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(results, [.found(documents: [Document(token: "token1", status: true, enterprise: nil)])])
     }
     
     func test_storeError_deliverRetrieveError() {
-        let (sut, store) = makeSUT()
+        let (sut, _) = makeSUT()
         let exp = expectation(description: "load from store")
         let error = anyError()
         
@@ -171,8 +194,6 @@ final class LocalLoadDocumentTests: XCTestCase {
             results.append(result)
             exp.fulfill()
         }
-        
-        store.completeRetrival(idx: 0, with: .failure(error))
         
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(results, [.failure(error)])
@@ -266,7 +287,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: CodableDocumentStore) {
-        let store = CodableDocumentStore()
+        let store = CodableDocumentStore(fileURL: fileURL)
         let sut = LocalLoadDocument(store: store)
         
         trackMemory(sut, file: file, line: line)
@@ -293,3 +314,5 @@ extension LocalLoadDocument.RemoveResult: Equatable {
         return "\(lhs)" == "\(rhs)"
     }
 }
+
+extension LocalDocument: Codable {}
