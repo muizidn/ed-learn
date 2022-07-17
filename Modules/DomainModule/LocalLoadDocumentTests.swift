@@ -28,14 +28,22 @@ final class LocalLoadDocument {
 }
 
 final class DocumentStore {
-    enum Message {
-        case retrieve
+    struct Message {
+        enum MsgType {
+            case retrieve
+        }
+        let type: MsgType
+        let completion: (Result<[Document], Error>) -> Void
     }
     
     private(set) var messages: [Message] = []
     
     func retrieve(completion: @escaping (Result<[Document], Error>) -> Void) {
-        messages.append(.retrieve)
+        messages.append(.init(type: .retrieve, completion: completion))
+    }
+    
+    func completeRetrival(idx: Int, with result: Result<[Document], Error>) {
+        messages[idx].completion(result)
     }
 }
 
@@ -53,8 +61,30 @@ final class LocalLoadDocumentTests: XCTestCase {
         sut.load { _ in }
         sut.load { _ in }
         
-        XCTAssertEqual(store.messages, [.retrieve, .retrieve])
+        XCTAssertEqual(store.messages.map { $0.type }, [.retrieve, .retrieve])
     }
+    
+    func test_storeEmpty_returnSuccessWithEmptyValue() {
+        let (sut, store) = makeSUT()
+        let exp = expectation(description: "load from store")
+        
+        var documents = [Document]()
+        sut.load { result in
+            switch result {
+            case .success(let docs):
+                documents = docs
+                exp.fulfill()
+            case .failure:
+                break
+            }
+        }
+        
+        store.completeRetrival(idx: 0, with: .success([]))
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertTrue(documents.isEmpty)
+    }
+    
     
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: DocumentStore) {
         let store = DocumentStore()
