@@ -85,6 +85,27 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertTrue(documents.isEmpty)
     }
     
+    func test_storeNotEmpty_deliverDocumentsValue() {
+        let (sut, store) = makeSUT()
+        let exp = expectation(description: "load from store")
+        
+        var documents = [Document]()
+        sut.load { result in
+            switch result {
+            case .success(let docs):
+                documents = docs
+                exp.fulfill()
+            case .failure:
+                break
+            }
+        }
+        
+        store.completeRetrival(idx: 0, with: .success([Document(token: "token1", status: true, enterprise: nil)]))
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(documents, [Document(token: "token1", status: true, enterprise: nil)])
+    }
+    
     
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: DocumentStore) {
         let store = DocumentStore()
