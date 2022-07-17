@@ -15,8 +15,15 @@ final class LocalLoadDocument {
         self.store = store
     }
     
-    func load() {
-        store.retrieve()
+    func load(completion: @escaping (LoadDocumentResult) -> Void) {
+        store.retrieve { result in
+            switch result {
+            case .success(let docs):
+                completion(.success(docs))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
 }
 
@@ -27,7 +34,7 @@ final class DocumentStore {
     
     private(set) var messages: [Message] = []
     
-    func retrieve() {
+    func retrieve(completion: @escaping (Result<[Document], Error>) -> Void) {
         messages.append(.retrieve)
     }
 }
@@ -43,12 +50,11 @@ final class LocalLoadDocumentTests: XCTestCase {
     func test_onLoadTwice_invokeStoreRetrieveTwice() {
         let (sut, store) = makeSUT()
         
-        sut.load()
-        sut.load()
+        sut.load { _ in }
+        sut.load { _ in }
         
         XCTAssertEqual(store.messages, [.retrieve, .retrieve])
     }
-    
     
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: DocumentStore) {
         let store = DocumentStore()
