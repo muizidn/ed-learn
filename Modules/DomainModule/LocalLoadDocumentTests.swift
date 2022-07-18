@@ -82,10 +82,6 @@ protocol DocumentStore {
 }
 
 final class CodableDocumentStore: DocumentStore {
-    private(set) var retrievalMessages: [(Result<[Document], Error>) -> Void] = []
-    private(set) var insertMessages: [(Result<Void, Error>) -> Void] = []
-    private(set) var removeMessages: [(Result<Void, Error>) -> Void] = []
-    
     private let fileURL: URL
     init(fileURL: URL) {
         self.fileURL = fileURL
