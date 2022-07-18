@@ -89,6 +89,9 @@ final class CodableDocumentStore: DocumentStore {
     private let fileURL: URL
     init(fileURL: URL) {
         self.fileURL = fileURL
+        if !FileManager.default.fileExists(atPath: fileURL.path) {
+            FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: nil)
+        }
     }
     
     func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void) {
@@ -161,6 +164,8 @@ final class LocalLoadDocumentTests: XCTestCase {
     func test_storeRetrieveEmpty_deliverRetrieveEmpty() {
         let sut = makeSUT()
         let exp = expectation(description: "load from store")
+        
+        try! "[]".write(to: fileURL, atomically: true, encoding: .utf8)
         
         var retrieveResults = [LocalLoadDocument.RetrieveResult]()
         sut.retrieve { result in
