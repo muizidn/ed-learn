@@ -106,19 +106,27 @@ final class CodableDocumentStore: DocumentStore {
     }
     
     func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void) {
-        insertMessages.append(completion)
-    }
-    
-    func completeInsert(idx: Int, with result: Result<Void, Error>) {
-        insertMessages[idx](result)
+        do {
+            let data = try JSONEncoder().encode(documents)
+            try data.write(to: fileURL)
+            completion(.success(()))
+        } catch {
+            completion(.failure(error))
+        }
     }
     
     func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void) {
-        removeMessages.append(completion)
-    }
-    
-    func completeRemove(idx: Int, with result: Result<Void, Error>) {
-        removeMessages[idx](result)
+        retrieve { [unowned self] result in
+            switch result {
+            case .success(let docs):
+                let filteredDocs = docs.filter { !tokens.contains($0.token) }
+                insert(documents: filteredDocs) { result in
+                    completion(result)
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
 }
 
@@ -136,6 +144,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     private func resetFileURLBeforeRunTest() {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         try! FileManager.default.removeItem(at: fileURL)
     }
     
@@ -145,6 +154,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     private func clearFileURLAfterRunTest() {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         try! FileManager.default.removeItem(at: fileURL)
     }
     
@@ -160,28 +170,36 @@ final class LocalLoadDocumentTests: XCTestCase {
         let (sut, _) = makeSUT()
         let exp = expectation(description: "load from store")
         
-        var results = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
         sut.retrieve { result in
-            results.append(result)
+            retrieveResults.append(result)
             exp.fulfill()
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.empty])
+        XCTAssertEqual(retrieveResults, [.empty])
     }
     
     func test_storeNotEmpty_deliverFoundDocumentsValue() {
         let (sut, _) = makeSUT()
-        let exp = expectation(description: "load from store")
+        let docs = [Document(token: "token1", status: true, enterprise: nil)]
         
-        var results = [LocalLoadDocument.RetrieveResult]()
+        var exp = expectation(description: "insert to store")
+        sut.insert(documents: docs, completion: { _ in
+            exp.fulfill()
+        })
+        wait(for: [exp], timeout: 1.0)
+        
+        exp = expectation(description: "load from store")
+        
+        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
         sut.retrieve { result in
-            results.append(result)
+            retrieveResults.append(result)
             exp.fulfill()
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.found(documents: [Document(token: "token1", status: true, enterprise: nil)])])
+        XCTAssertEqual(retrieveResults, [.found(documents: docs)])
     }
     
     func test_storeError_deliverRetrieveError() {
@@ -189,46 +207,51 @@ final class LocalLoadDocumentTests: XCTestCase {
         let exp = expectation(description: "load from store")
         let error = anyError()
         
-        var results = [LocalLoadDocument.RetrieveResult]()
+        try! "invalid json".write(toFile: fileURL.path, atomically: true, encoding: .utf8)
+        
+        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
         sut.retrieve { result in
-            results.append(result)
+            retrieveResults.append(result)
             exp.fulfill()
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.failure(error)])
-    }
-    
-    func test_onInsertTwice_invokeStoreInsertTwice() {
-        let (sut, store) = makeSUT()
-        
-        sut.insert(documents: []) { _ in }
-        sut.insert(documents: []) { _ in }
-        
-        XCTAssertEqual(store.insertMessages.count, 2)
+        XCTAssertEqual(retrieveResults, [.failure(error)])
     }
     
     func test_storeSuccess_deliverInsertSuccess() {
-        let (sut, store) = makeSUT()
-        let exp = expectation(description: "insert to store")
+        let (sut, _) = makeSUT()
+        var exp = expectation(description: "insert to store")
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
         
-        var results = [LocalLoadDocument.InsertResult]()
+        var insertResults = [LocalLoadDocument.InsertResult]()
         sut.insert(documents: docs) { result in
-            results.append(result)
+            insertResults.append(result)
             exp.fulfill()
         }
         
-        store.completeInsert(idx: 0, with: .success(()))
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(insertResults, [.success])
+        
+        
+        exp = expectation(description: "load from store")
+        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        sut.retrieve { result in
+            retrieveResults.append(result)
+            exp.fulfill()
+        }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.success])
+        XCTAssertEqual(retrieveResults, [.found(documents: docs)])
+        
     }
     
     func test_storeError_deliverInsertError() {
-        let (sut, store) = makeSUT()
+        let (sut, _) = makeSUT()
         let exp = expectation(description: "insert to store")
-        let error = anyError()
+        let dontCareErrorJustEnsureFailureHappen = anyError()
+        let readOnlyPermission = 777
+        FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: [.posixPermissions:readOnlyPermission])
         
         var results = [LocalLoadDocument.InsertResult]()
         sut.insert(documents: []) { result in
@@ -236,54 +259,63 @@ final class LocalLoadDocumentTests: XCTestCase {
             exp.fulfill()
         }
         
-        store.completeInsert(idx: 0, with: .failure(error))
-        
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.failure(error)])
-    }
-    
-    
-    func test_onRemoveTwice_invokeStoreRemoveTwice() {
-        let (sut, store) = makeSUT()
-        
-        sut.remove(tokens:  []) { _ in }
-        sut.remove(tokens:  []) { _ in }
-        
-        XCTAssertEqual(store.removeMessages.count, 2)
+        XCTAssertEqual(results, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
     
     func test_storeSuccess_deliverRemoveSuccess() {
-        let (sut, store) = makeSUT()
-        let exp = expectation(description: "remove from store")
-        let docs = ["token1"]
+        let (sut, _) = makeSUT()
+        let tokens = ["token1"]
+        let docs = [Document(token: "token1", status: true, enterprise: nil),Document(token: "token2", status: true, enterprise: nil)]
         
-        var results = [LocalLoadDocument.RemoveResult]()
-        sut.remove(tokens:  docs) { result in
-            results.append(result)
+        
+        var exp = expectation(description: "insert to store")
+        var insertResults = [LocalLoadDocument.InsertResult]()
+        sut.insert(documents: docs) { result in
+            insertResults.append(result)
             exp.fulfill()
         }
         
-        store.completeRemove(idx: 0, with: .success(()))
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(insertResults, [.success])
+        
+        
+        exp = expectation(description: "remove from store")
+        var removeResults = [LocalLoadDocument.RemoveResult]()
+        sut.remove(tokens:  tokens) { result in
+            removeResults.append(result)
+            exp.fulfill()
+        }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.success])
+        XCTAssertEqual(removeResults, [.success])
+        
+        exp = expectation(description: "load from store")
+        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        sut.retrieve { result in
+            retrieveResults.append(result)
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(retrieveResults, [.found(documents: [Document(token: "token2", status: true, enterprise: nil)])])
     }
     
     func test_storeError_deliverRemoveError() {
-        let (sut, store) = makeSUT()
+        let (sut, _) = makeSUT()
         let exp = expectation(description: "remove from store")
-        let error = anyError()
+        let dontCareErrorJustEnsureFailureHappen = anyError()
+        let readOnlyPermission = 777
+        FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: [.posixPermissions:readOnlyPermission])
         
         var results = [LocalLoadDocument.RemoveResult]()
-        sut.remove(tokens:  []) { result in
+        sut.remove(tokens: []) { result in
             results.append(result)
             exp.fulfill()
         }
         
-        store.completeRemove(idx: 0, with: .failure(error))
-        
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(results, [.failure(error)])
+        XCTAssertEqual(results, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
     
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: CodableDocumentStore) {
@@ -299,19 +331,32 @@ final class LocalLoadDocumentTests: XCTestCase {
 
 extension LocalLoadDocument.RetrieveResult: Equatable {
     static func == (lhs: LocalLoadDocument.RetrieveResult, rhs: LocalLoadDocument.RetrieveResult) -> Bool {
-        return "\(lhs)" == "\(rhs)"
+        switch (lhs, rhs) {
+        case (.empty, .empty): return true
+        case (.found(let docs), .found(let docs2)): return docs == docs2
+        case (.failure, .failure): return true
+        default: return false
+        }
     }
 }
 
 extension LocalLoadDocument.InsertResult: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
-        return "\(lhs)" == "\(rhs)"
+        switch (lhs, rhs) {
+        case (.success, .success): return true
+        case (.failure, .failure): return true
+        default: return false
+        }
     }
 }
 
 extension LocalLoadDocument.RemoveResult: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
-        return "\(lhs)" == "\(rhs)"
+        switch (lhs, rhs) {
+        case (.success, .success): return true
+        case (.failure, .failure): return true
+        default: return false
+        }
     }
 }
 
