@@ -89,9 +89,6 @@ final class CodableDocumentStore: DocumentStore {
     private let fileURL: URL
     init(fileURL: URL) {
         self.fileURL = fileURL
-        if !FileManager.default.fileExists(atPath: fileURL.path) {
-            FileManager.default.createFile(atPath: fileURL.path, contents: "[]".data(using: .utf8), attributes: nil)
-        }
     }
     
     func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void) {
@@ -145,6 +142,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     private func setStoreEmptyState() {
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         try! FileManager.default.removeItem(at: fileURL)
+        FileManager.default.createFile(atPath: fileURL.path, contents: "[]".data(using: .utf8), attributes: nil)
     }
     
     override func tearDown() {
