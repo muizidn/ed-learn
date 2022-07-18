@@ -100,7 +100,7 @@ final class CodableDocumentStore: DocumentStore {
     func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(documents)
-            try data.write(to: fileURL)
+            try data.write(to: self.fileURL)
             completion(.success(()))
         } catch {
             completion(.failure(error))
@@ -330,6 +330,35 @@ final class LocalLoadDocumentTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(results, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
+    
+    func test_sideEffect_runSerially() {
+        let sut = makeSUT()
+        let docs = [Document(token: "token1", status: true, enterprise: nil),
+                    Document(token: "token2", status: false, enterprise: "Demo")]
+        
+        let op1 = expectation(description: "Operation 1")
+        sut.insert(documents: docs) { _ in
+            op1.fulfill()
+        }
+
+        let op2 = expectation(description: "Operation 2")
+        sut.remove(tokens: docs.map{ $0.token }) { _ in
+            op2.fulfill()
+        }
+
+        let op3 = expectation(description: "Operation 3")
+        sut.insert(documents: docs) { _ in
+            op3.fulfill()
+        }
+
+        let op4 = expectation(description: "Operation 4")
+        sut.retrieve { _ in
+            op4.fulfill()
+        }
+
+        wait(for: [op1, op2, op3, op4], timeout: 5.0, enforceOrder: true)
+    }
+
     
     private func makeSUT(file: StaticString = #file, line: UInt = #line) -> LocalLoadDocument {
         let store = CodableDocumentStore(fileURL: fileURL)
