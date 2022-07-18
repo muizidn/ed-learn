@@ -191,7 +191,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     func test_storeRetrieveError_deliverRetrieveError() {
         let sut = makeSUT()
         let exp = expectation(description: "load from store")
-        let error = anyError()
+        let dontCareErrorJustEnsureFailureHappen = anyError()
         
         try! "invalid json".write(toFile: fileURL.path, atomically: true, encoding: .utf8)
         
@@ -202,7 +202,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(retrieveResults, [.failure(error)])
+        XCTAssertEqual(retrieveResults, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
     
     func test_storeRetrieveSuccess_deliverInsertSuccess() {
