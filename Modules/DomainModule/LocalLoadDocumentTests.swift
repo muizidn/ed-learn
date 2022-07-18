@@ -96,13 +96,9 @@ final class CodableDocumentStore: DocumentStore {
     
     func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void) {
         do {
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                let data = try Data(contentsOf: fileURL)
-                let docs = try JSONDecoder().decode([LocalDocument].self, from: data)
-                completion(.success(docs))
-            } else {
-                completion(.success([]))
-            }
+            let data = try Data(contentsOf: fileURL)
+            let docs = try JSONDecoder().decode([LocalDocument].self, from: data)
+            completion(.success(docs))
         } catch {
             completion(.failure(error))
         }
