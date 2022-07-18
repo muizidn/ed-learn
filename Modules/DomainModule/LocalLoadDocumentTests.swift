@@ -158,7 +158,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         try! FileManager.default.removeItem(at: fileURL)
     }
     
-    func test_storeEmpty_deliverRetrieveEmpty() {
+    func test_storeRetrieveEmpty_deliverRetrieveEmpty() {
         let sut = makeSUT()
         let exp = expectation(description: "load from store")
         
@@ -172,7 +172,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.empty])
     }
     
-    func test_storeNotEmpty_deliverFoundDocumentsValue() {
+    func test_storeRetrieveNotEmpty_deliverFoundDocumentsValue() {
         let sut = makeSUT()
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
         
@@ -194,7 +194,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.found(documents: docs)])
     }
     
-    func test_storeError_deliverRetrieveError() {
+    func test_storeRetrieveError_deliverRetrieveError() {
         let sut = makeSUT()
         let exp = expectation(description: "load from store")
         let error = anyError()
@@ -211,7 +211,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.failure(error)])
     }
     
-    func test_storeSuccess_deliverInsertSuccess() {
+    func test_storeRetrieveSuccess_deliverInsertSuccess() {
         let sut = makeSUT()
         var exp = expectation(description: "insert to store")
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
@@ -237,7 +237,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.found(documents: docs)])
     }
     
-    func test_insertTwice_replacePreviouslyInsertedDocuments() {
+    func test_insertInsertTwice_replacePreviouslyInsertedDocuments() {
         let sut = makeSUT()
         var exp = expectation(description: "insert to store")
         exp.expectedFulfillmentCount = 2
@@ -267,7 +267,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
     }
     
-    func test_storeError_deliverInsertError() {
+    func test_storeInsertError_deliverInsertError() {
         let sut = makeSUT()
         let exp = expectation(description: "insert to store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
@@ -284,7 +284,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(results, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
     
-    func test_storeSuccess_deliverRemoveSuccess() {
+    func test_storeRemoveSuccess_deliverRemoveSuccess() {
         let sut = makeSUT()
         let tokens = ["token1"]
         let docs = [Document(token: "token1", status: true, enterprise: nil),Document(token: "token2", status: true, enterprise: nil)]
@@ -320,7 +320,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.found(documents: [Document(token: "token2", status: true, enterprise: nil)])])
     }
     
-    func test_storeError_deliverRemoveError() {
+    func test_storeRemoveError_deliverRemoveError() {
         let sut = makeSUT()
         let exp = expectation(description: "remove from store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
