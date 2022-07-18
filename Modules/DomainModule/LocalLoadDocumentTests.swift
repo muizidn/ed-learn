@@ -291,14 +291,11 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         
         var exp = expectation(description: "insert to store")
-        var insertResults = [LocalLoadDocument.InsertResult]()
         sut.insert(documents: docs) { result in
-            insertResults.append(result)
             exp.fulfill()
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(insertResults, [.success])
         
         
         exp = expectation(description: "remove from store")
@@ -309,7 +306,6 @@ final class LocalLoadDocumentTests: XCTestCase {
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(removeResults, [.success])
         
         exp = expectation(description: "load from store")
         var retrieveResults = [LocalLoadDocument.RetrieveResult]()
@@ -319,6 +315,8 @@ final class LocalLoadDocumentTests: XCTestCase {
         }
         
         wait(for: [exp], timeout: 1.0)
+        
+        XCTAssertEqual(removeResults, [.success])
         XCTAssertEqual(retrieveResults, [.found(documents: [Document(token: "token2", status: true, enterprise: nil)])])
     }
     
