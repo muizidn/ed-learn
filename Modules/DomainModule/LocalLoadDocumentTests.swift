@@ -235,6 +235,35 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(retrieveResults, [.found(documents: docs)])
+    }
+    
+    func test_insertTwice_replacePreviouslyInsertedDocuments() {
+        let sut = makeSUT()
+        var exp = expectation(description: "insert to store")
+        exp.expectedFulfillmentCount = 2
+        
+        let docs1 = [Document(token: "token1", status: true, enterprise: nil)]
+        sut.insert(documents: docs1) { result in
+            exp.fulfill()
+        }
+        
+        let docs2 = [Document(token: "token2", status: true, enterprise: nil)]
+        sut.insert(documents: docs2) { result in
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+        
+        
+        exp = expectation(description: "load from store")
+        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        sut.retrieve { result in
+            retrieveResults.append(result)
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(retrieveResults, [.found(documents: docs2)])
         
     }
     
