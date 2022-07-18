@@ -140,20 +140,20 @@ final class LocalLoadDocumentTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        resetFileURLBeforeRunTest()
+        setStoreEmptyState()
     }
     
-    private func resetFileURLBeforeRunTest() {
+    private func setStoreEmptyState() {
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         try! FileManager.default.removeItem(at: fileURL)
     }
     
     override func tearDown() {
         super.tearDown()
-        clearFileURLAfterRunTest()
+        undoStoreSideEffect()
     }
     
-    private func clearFileURLAfterRunTest() {
+    private func undoStoreSideEffect() {
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
         try! FileManager.default.removeItem(at: fileURL)
     }
