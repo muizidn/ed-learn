@@ -158,16 +158,8 @@ final class LocalLoadDocumentTests: XCTestCase {
         try! FileManager.default.removeItem(at: fileURL)
     }
     
-    
-    func test_onInit_notSendMessage() {
-        let (_, store) = makeSUT()
-        
-        XCTAssertTrue(store.retrievalMessages.isEmpty)
-        XCTAssertTrue(store.insertMessages.isEmpty)
-    }
-    
     func test_storeEmpty_deliverRetrieveEmpty() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         let exp = expectation(description: "load from store")
         
         var retrieveResults = [LocalLoadDocument.RetrieveResult]()
@@ -181,7 +173,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     func test_storeNotEmpty_deliverFoundDocumentsValue() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
         
         var exp = expectation(description: "insert to store")
@@ -203,7 +195,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     func test_storeError_deliverRetrieveError() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         let exp = expectation(description: "load from store")
         let error = anyError()
         
@@ -220,7 +212,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     func test_storeSuccess_deliverInsertSuccess() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         var exp = expectation(description: "insert to store")
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
         
@@ -247,7 +239,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     func test_storeError_deliverInsertError() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         let exp = expectation(description: "insert to store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
         let readOnlyPermission = 777
@@ -264,7 +256,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     func test_storeSuccess_deliverRemoveSuccess() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         let tokens = ["token1"]
         let docs = [Document(token: "token1", status: true, enterprise: nil),Document(token: "token2", status: true, enterprise: nil)]
         
@@ -302,7 +294,7 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
     
     func test_storeError_deliverRemoveError() {
-        let (sut, _) = makeSUT()
+        let sut = makeSUT()
         let exp = expectation(description: "remove from store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
         let readOnlyPermission = 777
@@ -318,14 +310,14 @@ final class LocalLoadDocumentTests: XCTestCase {
         XCTAssertEqual(results, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
     
-    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> (sut: LocalLoadDocument, store: CodableDocumentStore) {
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> LocalLoadDocument {
         let store = CodableDocumentStore(fileURL: fileURL)
         let sut = LocalLoadDocument(store: store)
         
         trackMemory(sut, file: file, line: line)
         trackMemory(store, file: file, line: line)
         
-        return (sut, store)
+        return sut
     }
 }
 
