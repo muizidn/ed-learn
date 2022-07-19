@@ -41,11 +41,11 @@ final class LocalLoadDocument {
         store.retrieve { result in
             switch result {
             case .success(let docs):
-                if docs.isEmpty {
-                    completion(.empty)
-                } else {
-                    completion(.found(documents: docs.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })))
+                guard let docs = docs else  {
+                    return completion(.empty)
                 }
+                
+                completion(.found(documents: docs.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })))
             case .failure(let error):
                 completion(.failure(error))
             }
@@ -76,7 +76,7 @@ final class LocalLoadDocument {
 }
 
 protocol DocumentStore {
-    func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void)
+    func retrieve(completion: @escaping (Result<[LocalDocument]?, Error>) -> Void)
     func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void)
     func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void)
 }
@@ -87,7 +87,10 @@ final class CodableDocumentStore: DocumentStore {
         self.fileURL = fileURL
     }
     
-    func retrieve(completion: @escaping (Result<[LocalDocument], Error>) -> Void) {
+    func retrieve(completion: @escaping (Result<[LocalDocument]?, Error>) -> Void) {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return completion(.success(nil))
+        }
         do {
             let data = try Data(contentsOf: fileURL)
             let docs = try JSONDecoder().decode([LocalDocument].self, from: data)
@@ -111,7 +114,12 @@ final class CodableDocumentStore: DocumentStore {
         retrieve { [unowned self] result in
             switch result {
             case .success(let docs):
-                let filteredDocs = docs.filter { !tokens.contains($0.token) }
+                let filteredDocs = docs?.filter { !tokens.contains($0.token) }
+                
+                guard let filteredDocs = filteredDocs else {
+                    return completion(.success(()))
+                }
+                
                 insert(documents: filteredDocs) { result in
                     completion(result)
                 }
@@ -138,8 +146,8 @@ final class LocalLoadDocumentTests: XCTestCase {
     private func setStoreEmptyState() {
         if FileManager.default.fileExists(atPath: fileURL.path) {
             try! FileManager.default.removeItem(at: fileURL)
+            FileManager.default.createFile(atPath: fileURL.path, contents: "[]".data(using: .utf8), attributes: nil)
         }
-        FileManager.default.createFile(atPath: fileURL.path, contents: "[]".data(using: .utf8), attributes: nil)
     }
     
     override func tearDown() {
