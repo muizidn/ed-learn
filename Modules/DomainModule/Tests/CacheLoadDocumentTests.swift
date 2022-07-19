@@ -166,6 +166,28 @@ final class CacheLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.noCache])
     }
     
+    func test_storeRetrieveNotEmpty_arrayDocumentEmpty_deliverFoundDocumentsValue() {
+        let sut = makeSUT()
+        let docsEmptyArray = [Document]()
+        
+        var exp = expectation(description: "insert to store")
+        sut.insert(documents: docsEmptyArray, completion: { _ in
+            exp.fulfill()
+        })
+        wait(for: [exp], timeout: 1.0)
+        
+        exp = expectation(description: "load from store")
+        
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
+        sut.retrieve { result in
+            retrieveResults.append(result)
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(retrieveResults, [.found(documents: docsEmptyArray)])
+    }
+    
     func test_storeRetrieveNotEmpty_deliverFoundDocumentsValue() {
         let sut = makeSUT()
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
