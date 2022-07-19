@@ -63,8 +63,8 @@ final class LocalLoadDocument {
         }
     }
     
-    func remove(tokens: [String], completion: @escaping (RemoveResult) -> Void) {
-        store.remove(tokens: tokens) { result in
+    func remove(completion: @escaping (RemoveResult) -> Void) {
+        store.remove { result in
             switch result {
             case .success:
                 completion(.success)
@@ -78,7 +78,7 @@ final class LocalLoadDocument {
 protocol DocumentStore {
     func retrieve(completion: @escaping (Result<[LocalDocument]?, Error>) -> Void)
     func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void)
-    func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void)
+    func remove(completion: @escaping (Result<Void, Error>) -> Void)
 }
 
 final class CodableDocumentStore: DocumentStore {
@@ -110,22 +110,12 @@ final class CodableDocumentStore: DocumentStore {
         }
     }
     
-    func remove(tokens: [String], completion: @escaping (Result<Void, Error>) -> Void) {
-        retrieve { [unowned self] result in
-            switch result {
-            case .success(let docs):
-                let filteredDocs = docs?.filter { !tokens.contains($0.token) }
-                
-                guard let filteredDocs = filteredDocs else {
-                    return completion(.success(()))
-                }
-                
-                insert(documents: filteredDocs) { result in
-                    completion(result)
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
+    func remove(completion: @escaping (Result<Void, Error>) -> Void) {
+        do {
+            try FileManager.default.removeItem(atPath: fileURL.path)
+            completion(.success(()))
+        } catch {
+            completion(.failure(error))
         }
     }
 }
@@ -288,7 +278,6 @@ final class LocalLoadDocumentTests: XCTestCase {
     
     func test_storeRemoveSuccess_deliverRemoveSuccess() {
         let sut = makeSUT()
-        let tokens = ["token1"]
         let docs = [Document(token: "token1", status: true, enterprise: nil),Document(token: "token2", status: true, enterprise: nil)]
         
         
@@ -302,7 +291,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         exp = expectation(description: "remove from store")
         var removeResults = [LocalLoadDocument.RemoveResult]()
-        sut.remove(tokens:  tokens) { result in
+        sut.remove { result in
             removeResults.append(result)
             exp.fulfill()
         }
@@ -319,18 +308,16 @@ final class LocalLoadDocumentTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         
         XCTAssertEqual(removeResults, [.success])
-        XCTAssertEqual(retrieveResults, [.found(documents: [Document(token: "token2", status: true, enterprise: nil)])])
+        XCTAssertEqual(retrieveResults, [.empty])
     }
     
     func test_storeRemoveError_deliverRemoveError() {
         let sut = makeSUT()
         let exp = expectation(description: "remove from store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
-        let readOnlyPermission = 777
-        FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: [.posixPermissions:readOnlyPermission])
         
         var results = [LocalLoadDocument.RemoveResult]()
-        sut.remove(tokens: []) { result in
+        sut.remove { result in
             results.append(result)
             exp.fulfill()
         }
@@ -350,7 +337,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         }
 
         let op2 = expectation(description: "Operation 2")
-        sut.remove(tokens: docs.map{ $0.token }) { _ in
+        sut.remove { _ in
             op2.fulfill()
         }
 
