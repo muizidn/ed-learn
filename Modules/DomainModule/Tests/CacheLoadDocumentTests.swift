@@ -81,6 +81,8 @@ protocol DocumentStore {
     func remove(completion: @escaping (Result<Void, Error>) -> Void)
 }
 
+extension LocalDocument: Codable {}
+
 final class CodableDocumentStore: DocumentStore {
     private let fileURL: URL
     init(fileURL: URL) {
@@ -396,5 +398,3 @@ extension CacheLoadDocument.RemoveResult: Equatable {
         }
     }
 }
-
-extension LocalDocument: Codable {}
