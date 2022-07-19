@@ -1,5 +1,5 @@
 //
-//  LocalLoadDocumentTests.swift
+//  CacheLoadDocumentTests.swift
 //  Pods
 //
 //  Created by Muhammad Muizzsudin on 17/07/22.
@@ -15,7 +15,7 @@ struct LocalDocument {
     let enterprise: String?
 }
 
-final class LocalLoadDocument {
+final class CacheLoadDocument {
     enum RetrieveResult {
         case empty
         case found(documents: [Document])
@@ -120,7 +120,7 @@ final class CodableDocumentStore: DocumentStore {
     }
 }
 
-final class LocalLoadDocumentTests: XCTestCase {
+final class CacheLoadDocumentTests: XCTestCase {
     
     private let fileURL = FileManager
         .default
@@ -154,7 +154,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         let sut = makeSUT()
         let exp = expectation(description: "load from store")
         
-        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
         sut.retrieve { result in
             retrieveResults.append(result)
             exp.fulfill()
@@ -176,7 +176,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         exp = expectation(description: "load from store")
         
-        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
         sut.retrieve { result in
             retrieveResults.append(result)
             exp.fulfill()
@@ -193,7 +193,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         try! "invalid json".write(toFile: fileURL.path, atomically: true, encoding: .utf8)
         
-        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
         sut.retrieve { result in
             retrieveResults.append(result)
             exp.fulfill()
@@ -208,7 +208,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         var exp = expectation(description: "insert to store")
         let docs = [Document(token: "token1", status: true, enterprise: nil)]
         
-        var insertResults = [LocalLoadDocument.InsertResult]()
+        var insertResults = [CacheLoadDocument.InsertResult]()
         sut.insert(documents: docs) { result in
             insertResults.append(result)
             exp.fulfill()
@@ -219,7 +219,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         
         exp = expectation(description: "load from store")
-        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
         sut.retrieve { result in
             retrieveResults.append(result)
             exp.fulfill()
@@ -248,7 +248,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         
         exp = expectation(description: "load from store")
-        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
         sut.retrieve { result in
             retrieveResults.append(result)
             exp.fulfill()
@@ -266,7 +266,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         let readOnlyPermission = 777
         FileManager.default.createFile(atPath: fileURL.path, contents: nil, attributes: [.posixPermissions:readOnlyPermission])
         
-        var results = [LocalLoadDocument.InsertResult]()
+        var results = [CacheLoadDocument.InsertResult]()
         sut.insert(documents: []) { result in
             results.append(result)
             exp.fulfill()
@@ -290,7 +290,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         
         
         exp = expectation(description: "remove from store")
-        var removeResults = [LocalLoadDocument.RemoveResult]()
+        var removeResults = [CacheLoadDocument.RemoveResult]()
         sut.remove { result in
             removeResults.append(result)
             exp.fulfill()
@@ -299,7 +299,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         
         exp = expectation(description: "load from store")
-        var retrieveResults = [LocalLoadDocument.RetrieveResult]()
+        var retrieveResults = [CacheLoadDocument.RetrieveResult]()
         sut.retrieve { result in
             retrieveResults.append(result)
             exp.fulfill()
@@ -316,7 +316,7 @@ final class LocalLoadDocumentTests: XCTestCase {
         let exp = expectation(description: "remove from store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
         
-        var results = [LocalLoadDocument.RemoveResult]()
+        var results = [CacheLoadDocument.RemoveResult]()
         sut.remove { result in
             results.append(result)
             exp.fulfill()
@@ -355,9 +355,9 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
 
     
-    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> LocalLoadDocument {
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> CacheLoadDocument {
         let store = CodableDocumentStore(fileURL: fileURL)
-        let sut = LocalLoadDocument(store: store)
+        let sut = CacheLoadDocument(store: store)
         
         trackMemory(sut, file: file, line: line)
         trackMemory(store, file: file, line: line)
@@ -366,8 +366,8 @@ final class LocalLoadDocumentTests: XCTestCase {
     }
 }
 
-extension LocalLoadDocument.RetrieveResult: Equatable {
-    static func == (lhs: LocalLoadDocument.RetrieveResult, rhs: LocalLoadDocument.RetrieveResult) -> Bool {
+extension CacheLoadDocument.RetrieveResult: Equatable {
+    static func == (lhs: CacheLoadDocument.RetrieveResult, rhs: CacheLoadDocument.RetrieveResult) -> Bool {
         switch (lhs, rhs) {
         case (.empty, .empty): return true
         case (.found(let docs), .found(let docs2)): return docs == docs2
@@ -377,7 +377,7 @@ extension LocalLoadDocument.RetrieveResult: Equatable {
     }
 }
 
-extension LocalLoadDocument.InsertResult: Equatable {
+extension CacheLoadDocument.InsertResult: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case (.success, .success): return true
@@ -387,7 +387,7 @@ extension LocalLoadDocument.InsertResult: Equatable {
     }
 }
 
-extension LocalLoadDocument.RemoveResult: Equatable {
+extension CacheLoadDocument.RemoveResult: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case (.success, .success): return true
