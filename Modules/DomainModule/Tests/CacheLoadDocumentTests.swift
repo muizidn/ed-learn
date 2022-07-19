@@ -17,7 +17,7 @@ struct LocalDocument {
 
 final class CacheLoadDocument {
     enum RetrieveResult {
-        case empty
+        case noCache
         case found(documents: [Document])
         case failure(Error)
     }
@@ -42,7 +42,7 @@ final class CacheLoadDocument {
             switch result {
             case .success(let docs):
                 guard let docs = docs else  {
-                    return completion(.empty)
+                    return completion(.noCache)
                 }
                 
                 completion(.found(documents: docs.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })))
@@ -152,7 +152,7 @@ final class CacheLoadDocumentTests: XCTestCase {
         try! FileManager.default.removeItem(at: fileURL)
     }
     
-    func test_storeRetrieveEmpty_deliverRetrieveEmpty() {
+    func test_storeRetrieveEmpty_deliverRetrieveNoCache() {
         let sut = makeSUT()
         let exp = expectation(description: "load from store")
         
@@ -163,7 +163,7 @@ final class CacheLoadDocumentTests: XCTestCase {
         }
         
         wait(for: [exp], timeout: 1.0)
-        XCTAssertEqual(retrieveResults, [.empty])
+        XCTAssertEqual(retrieveResults, [.noCache])
     }
     
     func test_storeRetrieveNotEmpty_deliverFoundDocumentsValue() {
@@ -310,7 +310,7 @@ final class CacheLoadDocumentTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
         
         XCTAssertEqual(removeResults, [.success])
-        XCTAssertEqual(retrieveResults, [.empty])
+        XCTAssertEqual(retrieveResults, [.noCache])
     }
     
     func test_storeRemoveError_deliverRemoveError() {
@@ -371,7 +371,7 @@ final class CacheLoadDocumentTests: XCTestCase {
 extension CacheLoadDocument.RetrieveResult: Equatable {
     static func == (lhs: CacheLoadDocument.RetrieveResult, rhs: CacheLoadDocument.RetrieveResult) -> Bool {
         switch (lhs, rhs) {
-        case (.empty, .empty): return true
+        case (.noCache, .noCache): return true
         case (.found(let docs), .found(let docs2)): return docs == docs2
         case (.failure, .failure): return true
         default: return false
