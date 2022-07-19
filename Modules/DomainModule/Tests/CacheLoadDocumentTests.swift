@@ -9,119 +9,6 @@ import Foundation
 import XCTest
 import DomainModule
 
-struct LocalDocument {
-    let token: String
-    let status: Bool
-    let enterprise: String?
-}
-
-final class CacheLoadDocument {
-    enum RetrieveResult {
-        case noCache
-        case found(documents: [Document])
-        case failure(Error)
-    }
-    
-    enum InsertResult {
-        case success
-        case failure(Error)
-    }
-    
-    enum RemoveResult {
-        case success
-        case failure(Error)
-    }
-    
-    private let store: DocumentStore
-    init(store: DocumentStore) {
-        self.store = store
-    }
-    
-    func retrieve(completion: @escaping (RetrieveResult) -> Void) {
-        store.retrieve { result in
-            switch result {
-            case .success(let docs):
-                guard let docs = docs else  {
-                    return completion(.noCache)
-                }
-                
-                completion(.found(documents: docs.map({ Document(token: $0.token, status: $0.status, enterprise: $0.enterprise) })))
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-    
-    func insert(documents: [Document], completion: @escaping (InsertResult) -> Void) {
-        store.insert(documents: documents.map { LocalDocument(token: $0.token, status: $0.status, enterprise: $0.enterprise) }) { result in
-            switch result {
-            case .success:
-                completion(.success)
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-    
-    func remove(completion: @escaping (RemoveResult) -> Void) {
-        store.remove { result in
-            switch result {
-            case .success:
-                completion(.success)
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-}
-
-protocol DocumentStore {
-    func retrieve(completion: @escaping (Result<[LocalDocument]?, Error>) -> Void)
-    func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void)
-    func remove(completion: @escaping (Result<Void, Error>) -> Void)
-}
-
-extension LocalDocument: Codable {}
-
-final class CodableDocumentStore: DocumentStore {
-    private let fileURL: URL
-    init(fileURL: URL) {
-        self.fileURL = fileURL
-    }
-    
-    func retrieve(completion: @escaping (Result<[LocalDocument]?, Error>) -> Void) {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return completion(.success(nil))
-        }
-        do {
-            let data = try Data(contentsOf: fileURL)
-            let docs = try JSONDecoder().decode([LocalDocument].self, from: data)
-            completion(.success(docs))
-        } catch {
-            completion(.failure(error))
-        }
-    }
-    
-    func insert(documents: [LocalDocument], completion: @escaping (Result<Void, Error>) -> Void) {
-        do {
-            let data = try JSONEncoder().encode(documents)
-            try data.write(to: self.fileURL)
-            completion(.success(()))
-        } catch {
-            completion(.failure(error))
-        }
-    }
-    
-    func remove(completion: @escaping (Result<Void, Error>) -> Void) {
-        do {
-            try FileManager.default.removeItem(atPath: fileURL.path)
-            completion(.success(()))
-        } catch {
-            completion(.failure(error))
-        }
-    }
-}
-
 final class CacheLoadDocumentTests: XCTestCase {
     
     private let fileURL = FileManager
@@ -399,7 +286,7 @@ final class CacheLoadDocumentTests: XCTestCase {
 }
 
 extension CacheLoadDocument.RetrieveResult: Equatable {
-    static func == (lhs: CacheLoadDocument.RetrieveResult, rhs: CacheLoadDocument.RetrieveResult) -> Bool {
+    public static func == (lhs: CacheLoadDocument.RetrieveResult, rhs: CacheLoadDocument.RetrieveResult) -> Bool {
         switch (lhs, rhs) {
         case (.noCache, .noCache): return true
         case (.found(let docs), .found(let docs2)): return docs == docs2
@@ -410,7 +297,7 @@ extension CacheLoadDocument.RetrieveResult: Equatable {
 }
 
 extension CacheLoadDocument.InsertResult: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case (.success, .success): return true
         case (.failure, .failure): return true
@@ -420,7 +307,7 @@ extension CacheLoadDocument.InsertResult: Equatable {
 }
 
 extension CacheLoadDocument.RemoveResult: Equatable {
-    static func == (lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         switch (lhs, rhs) {
         case (.success, .success): return true
         case (.failure, .failure): return true
