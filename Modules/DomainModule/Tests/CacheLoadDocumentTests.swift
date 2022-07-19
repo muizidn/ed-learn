@@ -227,10 +227,11 @@ final class CacheLoadDocumentTests: XCTestCase {
         XCTAssertEqual(retrieveResults, [.failure(dontCareErrorJustEnsureFailureHappen)])
     }
     
-    func test_storeRetrieveSuccess_deliverInsertSuccess() {
+    func test_storeInsertSuccess_deliverInsertSuccess() {
         let sut = makeSUT()
         var exp = expectation(description: "insert to store")
-        let docs = [Document(token: "token1", status: true, enterprise: nil)]
+        let docs = [Document(token: "token1", status: true, enterprise: nil),
+                    Document(token: "token1", status: true, enterprise: nil)]
         
         var insertResults = [CacheLoadDocument.InsertResult]()
         sut.insert(documents: docs) { result in
