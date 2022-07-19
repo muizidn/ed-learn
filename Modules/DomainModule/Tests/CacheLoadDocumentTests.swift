@@ -341,6 +341,8 @@ final class CacheLoadDocumentTests: XCTestCase {
         let exp = expectation(description: "remove from store")
         let dontCareErrorJustEnsureFailureHappen = anyError()
         
+        createThenDeleteToEnsureFileNotExist()
+        
         var results = [CacheLoadDocument.RemoveResult]()
         sut.remove { result in
             results.append(result)
@@ -349,6 +351,11 @@ final class CacheLoadDocumentTests: XCTestCase {
         
         wait(for: [exp], timeout: 1.0)
         XCTAssertEqual(results, [.failure(dontCareErrorJustEnsureFailureHappen)])
+    }
+    
+    private func createThenDeleteToEnsureFileNotExist() {
+        FileManager.default.createFile(atPath: fileURL.path, contents: nil)
+        try! FileManager.default.removeItem(at: fileURL)
     }
     
     func test_sideEffect_runSerially() {
